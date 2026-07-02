@@ -1,0 +1,1491 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>직원 일정 공유</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg:#eef2f7; --surface:#ffffff; --surface2:#f3f4f6; --border:#d1d9e6;
+    --text:#1a2332; --text2:#5a6a7a; --accent:#3b82f6; --radius:10px;
+    --oh-bg:#1e40af; --oh-text:#ffffff; --oh-cal:#1e40af;
+    --gjc-bg:#15803d; --gjc-text:#ffffff; --gjc-cal:#15803d;
+    --gsm-bg:#dc2626; --gsm-text:#ffffff; --gsm-cal:#dc2626;
+    --header-bg:#1e3a8a; --header-text:#ffffff;
+    --shadow-sm:0 1px 2px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.08);
+    --shadow-md:0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -1px rgba(0,0,0,0.06);
+    --shadow-lg:0 10px 20px -5px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+    --shadow-inset:inset 0 1px 2px rgba(0,0,0,0.06);
+  }
+  body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:#ffffff; color:var(--text); font-size:13px; min-height:100vh; }
+  .app { max-width:1200px; margin:0 auto; padding:16px; }
+  .app-grid { display:grid; grid-template-columns:1fr 320px; gap:16px; align-items:stretch; }
+  .left-col { display:flex; flex-direction:column; }
+  .right-col { display:flex; flex-direction:column; height:100%; }
+  @media(max-width:860px){
+    .app-grid{grid-template-columns:1fr;}
+    /* 모바일에서는 오른쪽 채팅 컬럼 숨김 */
+    .right-col { display:none; }
+    /* FAB 채팅 버튼 표시 */
+    .chat-fab { display:flex !important; }
+    /* 모바일에서 세부일정 스크롤 여유 */
+    .table-wrap { max-height:240px; }
+    /* 모바일에서만 특정 헤더 표시/숨김 */
+    .col-loc, .col-manage { display:none !important; }
+    .col-check { display:table-cell !important; }
+    /* 달력 셀 크기 */
+    .cal-cell { min-height:52px; padding:3px; }
+    .cal-event { font-size:9px; padding:1px 3px; }
+    /* 헤더 폰트 축소 */
+    .header h1 { font-size:16px; }
+    /* 페이지 여백 축소 */
+    .app { padding:12px; }
+  }
+  /* 웹에서는 벌크바 숨김 */
+  @media(min-width:861px){
+    #bulkActionBar { display:none !important; }
+  }
+
+  /* ── FAB (Floating Action Button) ────────────── */
+  .chat-fab { display:none; position:fixed; bottom:20px; right:20px; width:60px; height:60px; border-radius:50%; background:linear-gradient(135deg,#3b82f6 0%,#1e40af 100%); color:#fff; border:none; cursor:pointer; align-items:center; justify-content:center; box-shadow:0 6px 20px rgba(59,130,246,0.5); z-index:80; transition:all .2s; }
+  .chat-fab:hover { transform:scale(1.08); box-shadow:0 8px 24px rgba(59,130,246,0.6); }
+  .chat-fab:active { transform:scale(0.95); }
+  .chat-fab .fab-badge { position:absolute; top:2px; right:2px; background:#ef4444; color:#fff; font-size:10px; font-weight:800; padding:2px 6px; border-radius:10px; border:2px solid #fff; min-width:20px; text-align:center; }
+  .chat-fab.hidden-badge .fab-badge { display:none; }
+
+  /* 모바일 채팅 팝업 오버레이 */
+  .mobile-chat-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:90; align-items:flex-end; justify-content:center; animation:fadeIn .2s ease-out; }
+  .mobile-chat-overlay.open { display:flex; }
+  @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+  .mobile-chat-container { width:100%; max-width:500px; height:90vh; background:#fff; border-radius:16px 16px 0 0; display:flex; flex-direction:column; overflow:hidden; animation:slideUp .25s ease-out; position:relative; }
+  @keyframes slideUp { from{transform:translateY(100%);} to{transform:translateY(0);} }
+  .mobile-chat-close { position:absolute; top:14px; right:14px; width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,0.2); border:none; cursor:pointer; color:#fff; display:flex; align-items:center; justify-content:center; z-index:100; }
+  .mobile-chat-close:hover { background:rgba(255,255,255,0.35); }
+  /* 모바일 팝업 안의 채팅 패널 조정 */
+  .mobile-chat-container .chat-panel { border:none; box-shadow:none; height:100%; min-height:0; margin:0; border-radius:16px 16px 0 0; }
+  .mobile-chat-container .chat-panel-header { padding-right:56px; }
+
+  /* Header - 입체적 */
+  .header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:8px; background:linear-gradient(135deg,#1e40af 0%,#1e3a8a 50%,#312e81 100%); padding:14px 18px; border-radius:12px; box-shadow:var(--shadow-lg), inset 0 1px 0 rgba(255,255,255,0.15); min-height:56px; }
+  .header h1 { font-size:18px; font-weight:700; display:flex; align-items:center; gap:8px; color:#fff; text-shadow:0 1px 2px rgba(0,0,0,0.3); letter-spacing:0.02em; }
+
+  /* 버튼 - 입체감 */
+  .btn { display:inline-flex; align-items:center; gap:5px; padding:7px 14px; border:1px solid var(--border); border-radius:8px; background:linear-gradient(180deg,#ffffff 0%,#f3f4f6 100%); color:var(--text); cursor:pointer; font-size:12px; font-weight:600; transition:all .15s; box-shadow:var(--shadow-sm), inset 0 1px 0 #fff; }
+  .btn:hover { background:linear-gradient(180deg,#f9fafb 0%,#e5e7eb 100%); transform:translateY(-1px); box-shadow:var(--shadow-md), inset 0 1px 0 #fff; }
+  .btn:active { transform:translateY(0); box-shadow:var(--shadow-inset); }
+  .btn.primary { background:linear-gradient(180deg,#22c55e 0%,#16a34a 100%); color:#fff; border-color:#15803d; text-shadow:0 1px 1px rgba(0,0,0,0.2); }
+  .btn.primary:hover { background:linear-gradient(180deg,#16a34a 0%,#15803d 100%); }
+  .btn svg { width:14px; height:14px; }
+
+  /* Section header */
+  .section-header {
+    font-size:15px; font-weight:800; color:var(--text);
+    background:transparent;
+    padding:6px 0 8px 0; border-bottom:2px solid #cbd5e1; margin-bottom:10px;
+    display:flex; align-items:center; gap:7px;
+    letter-spacing:0.02em;
+  }
+  .section-header svg { color:#3b82f6; }
+
+  /* User bar */
+  .user-bar { display:flex; align-items:center; gap:8px; margin-bottom:14px; flex-wrap:wrap; background:var(--surface); padding:10px 14px; border-radius:var(--radius); border:1px solid var(--border); }
+  .user-bar span { font-size:12px; font-weight:600; color:var(--text2); }
+  .user-chip { padding:4px 12px; border-radius:20px; border:1px solid var(--border); cursor:pointer; font-size:12px; font-weight:500; background:var(--surface2); transition:all .15s; }
+  .user-chip.active-oh  { background:var(--oh-bg);  color:var(--oh-text);  border-color:var(--oh-cal); }
+  .user-chip.active-gjc { background:var(--gjc-bg); color:var(--gjc-text); border-color:var(--gjc-cal); }
+  .user-chip.active-gsm { background:var(--gsm-bg); color:var(--gsm-text); border-color:var(--gsm-cal); }
+  .user-bar-hidden { display:none; }
+
+  /* Legend */
+  .legend { display:flex; gap:14px; margin-bottom:14px; flex-wrap:wrap; }
+  .legend-item { display:flex; align-items:center; gap:5px; font-size:12px; color:var(--text2); }
+  .legend-dot { width:12px; height:12px; border-radius:3px; }
+  .dot-oh{background:var(--oh-cal);} .dot-gjc{background:var(--gjc-cal);} .dot-gsm{background:var(--gsm-cal);}
+
+  /* Section header */
+  .section-header {
+    font-size:15px; font-weight:700; color:var(--text);
+    background:transparent;
+    padding:6px 0 8px 0; border-bottom:2px solid var(--border); margin-bottom:10px;
+    display:flex; align-items:center; gap:7px;
+    letter-spacing:0.02em;
+  }
+  .section-header svg { color:#2563eb; }
+
+  /* Table */
+  .table-wrap { overflow:auto; margin-bottom:20px; border:1px solid var(--border); border-radius:12px; box-shadow:var(--shadow-md); background:#fff; max-height:220px; }
+  table { width:100%; border-collapse:collapse; min-width:520px; }
+  thead th { position:sticky; top:0; z-index:5; }
+  thead th {
+    background:linear-gradient(180deg,#dbeafe 0%,#bfdbfe 100%); color:#1a2332;
+    font-size:12px; font-weight:800; padding:11px 10px;
+    text-align:left; border-bottom:2px solid #93c5fd; white-space:nowrap;
+    border-right:1px solid #bfdbfe;
+    text-shadow:0 1px 0 rgba(255,255,255,0.5);
+  }
+  thead th:last-child { border-right:none; }
+  tbody td { padding:8px 10px; border-bottom:1px solid #e8eef6; border-right:1px solid #edf2fa; vertical-align:middle; font-size:12px; }
+  tbody td:last-child { border-right:none; }
+  tbody tr:nth-child(even) { background:#fafcff; }
+  tbody tr:nth-child(odd) { background:#ffffff; }
+  tbody tr:last-child td { border-bottom:none; }
+  tbody tr:hover { background:#e8f0fe !important; }
+  .clickable-row { cursor:pointer; transition:background .1s; }
+  .clickable-row:hover { background:#e8f0fe !important; }
+  .row-check { accent-color:#3b82f6; }
+  #checkAll { accent-color:#3b82f6; width:16px; height:16px; }
+  #bulkActionBar { display:none; }
+  .empty-row td { text-align:center; color:var(--text2); font-style:italic; padding:20px; background:#fff !important; border-right:none !important; }
+  .pill { display:inline-block; padding:3px 11px; border-radius:20px; font-size:11px; font-weight:800; white-space:nowrap; box-shadow:var(--shadow-sm), inset 0 1px 0 rgba(255,255,255,0.2); text-shadow:0 1px 1px rgba(0,0,0,0.15); }
+  .pill-oh{background:linear-gradient(180deg,#3b82f6 0%,#1e40af 100%);color:#fff;}
+  .pill-gjc{background:linear-gradient(180deg,#22c55e 0%,#15803d 100%);color:#fff;}
+  .pill-gsm{background:linear-gradient(180deg,#ef4444 0%,#b91c1c 100%);color:#fff;}
+  .loc-badge { display:inline-block; padding:2px 8px; border-radius:5px; font-size:11px; background:linear-gradient(180deg,#f3f4f6 0%,#e5e7eb 100%); color:var(--text); box-shadow:var(--shadow-sm), inset 0 1px 0 #fff; font-weight:600; }
+  .action-btn { padding:5px 8px; border:1px solid var(--border); border-radius:6px; background:linear-gradient(180deg,#fff 0%,#f3f4f6 100%); color:var(--text2); cursor:pointer; font-size:11px; margin:0 1px; box-shadow:var(--shadow-sm), inset 0 1px 0 #fff; transition:all .15s; }
+  .action-btn:hover { background:linear-gradient(180deg,#f9fafb 0%,#e5e7eb 100%); transform:translateY(-1px); box-shadow:var(--shadow-md); }
+  .action-btn:active { transform:translateY(0); }
+  .action-btn.del:hover { background:linear-gradient(180deg,#fee2e2 0%,#fecaca 100%); color:#b91c1c; border-color:#fca5a5; }
+
+  /* Month nav */
+  .month-nav { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+  .month-nav span { font-size:15px; font-weight:700; min-width:100px; text-align:center; }
+  .nav-btn { width:30px; height:30px; display:flex; align-items:center; justify-content:center; border:1px solid var(--border); border-radius:8px; background:linear-gradient(180deg,#fff 0%,#f3f4f6 100%); cursor:pointer; font-size:15px; font-weight:700; box-shadow:var(--shadow-sm), inset 0 1px 0 #fff; transition:all .15s; }
+  .nav-btn:hover { background:linear-gradient(180deg,#f9fafb 0%,#e5e7eb 100%); transform:translateY(-1px); box-shadow:var(--shadow-md); }
+  .nav-btn:active { transform:translateY(0); }
+
+  /* Calendar */
+  .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:1px; background:var(--border); border:1px solid var(--border); border-radius:12px; overflow:hidden; margin-bottom:20px; box-shadow:var(--shadow-md); }
+  .cal-head {
+    background:linear-gradient(180deg,#dbeafe 0%,#bfdbfe 100%); color:#1a2332;
+    padding:10px 4px; text-align:center; font-size:12px; font-weight:800;
+    text-shadow:0 1px 0 rgba(255,255,255,0.5);
+  }
+  .cal-head.sun { background:linear-gradient(180deg,#fecaca 0%,#fca5a5 100%); color:#7f1d1d; }
+  .cal-head.sat { background:linear-gradient(180deg,#ddd6fe 0%,#c4b5fd 100%); color:#4c1d95; }
+  .cal-cell { background:var(--surface); min-height:64px; padding:4px; transition:background .15s; }
+  .cal-cell:hover { background:#f0f7ff; }
+  .cal-cell.other-month { background:#f8fafc; }
+  .cal-cell.other-month:hover { background:#f0f4f8; }
+  .cal-num { font-size:12px; font-weight:600; margin-bottom:3px; padding:2px 4px; display:inline-block; line-height:1; border-radius:50%; }
+  .cal-num.today { background:linear-gradient(180deg,#60a5fa 0%,#3b82f6 100%); color:#fff; box-shadow:var(--shadow-sm); }
+  .cal-num.sun-color { color:#dc2626; }
+  .cal-num.sat-color { color:#7c3aed; }
+  .cal-event { font-size:10px; padding:2px 5px; border-radius:4px; margin-bottom:2px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; line-height:14px; font-weight:600; color:#fff; box-shadow:var(--shadow-sm); text-shadow:0 1px 1px rgba(0,0,0,0.15); }
+  .cal-event.oh{background:linear-gradient(180deg,#3b82f6 0%,#1e40af 100%);}
+  .cal-event.gjc{background:linear-gradient(180deg,#22c55e 0%,#15803d 100%);}
+  .cal-event.gsm{background:linear-gradient(180deg,#ef4444 0%,#b91c1c 100%);}
+
+  /* Chat */
+  .chat-panel { background:var(--surface); border:1px solid var(--border); border-radius:12px; display:flex; flex-direction:column; height:100%; min-height:700px; box-shadow:var(--shadow-lg); overflow:hidden; margin-bottom:20px; }
+  /* 당구공 아바타 */
+  .billiard { display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:50%; font-size:10px; font-weight:900; color:#000; box-shadow:0 2px 4px rgba(0,0,0,0.25), inset -2px -3px 4px rgba(0,0,0,0.25), inset 2px 3px 4px rgba(255,255,255,0.6); position:relative; overflow:hidden; flex-shrink:0; font-family:'Georgia',serif; }
+  .billiard::before { content:''; position:absolute; top:2px; left:4px; width:8px; height:8px; border-radius:50%; background:radial-gradient(circle at 30% 30%, rgba(255,255,255,0.9), rgba(255,255,255,0)); }
+  .billiard-inner { display:inline-flex; align-items:center; justify-content:center; width:14px; height:14px; background:#fff; border-radius:50%; z-index:1; box-shadow:inset 0 1px 2px rgba(0,0,0,0.1); }
+  .billiard-5 { background:radial-gradient(circle at 30% 30%, #ff9d5c, #d97706 70%, #78350f); } /* 오세훈 - 주황(5번) */
+  .billiard-0 { background:radial-gradient(circle at 30% 30%, #4b4b4b, #1f1f1f 70%, #000); color:#fff; }  /* 공석민 - 검정(0번=8공느낌) */
+  .billiard-9 { background:radial-gradient(circle at 30% 30%, #fde68a, #fbbf24 55%, #d97706); } /* 구자천 - 노랑(9번) */
+
+  /* 메시지 배치 */
+  .msg { max-width:82%; display:flex; flex-direction:column; gap:2px; }
+  .msg-row { display:flex; gap:6px; align-items:flex-start; }
+  .msg.mine { align-self:flex-end; align-items:flex-end; }
+  .msg.theirs { align-self:flex-start; align-items:flex-start; }
+  .msg.mine .msg-row { flex-direction:row-reverse; }
+
+  .chat-panel-header { padding:14px 18px; border-bottom:1px solid rgba(255,255,255,0.15); background:linear-gradient(135deg,#1e40af 0%,#1e3a8a 50%,#312e81 100%); border-radius:12px 12px 0 0; box-shadow:inset 0 1px 0 rgba(255,255,255,0.15); min-height:56px; display:flex; align-items:center; }
+  .chat-panel-header h2 { font-size:14px; font-weight:800; margin-bottom:0; color:#fff; text-shadow:0 1px 1px rgba(0,0,0,0.2); }
+  /* 단톡방 타이틀 */
+  .room-title-row { padding-bottom:0; margin-bottom:0; width:100%; }
+  .room-title { font-size:18px; font-weight:700; color:#ffffff; text-shadow:0 1px 2px rgba(0,0,0,0.3); letter-spacing:0.02em; display:flex; align-items:center; gap:8px; }
+  /* 방장선택 드롭다운 */
+  .owner-btn { display:inline-flex; align-items:center; padding:6px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.5); background:rgba(255,255,255,0.9); color:#1e40af; font-size:11px; font-weight:800; cursor:pointer; transition:all .15s; box-shadow:var(--shadow-sm), inset 0 1px 0 #fff; }
+  .owner-btn:hover { background:#fff; transform:translateY(-1px); box-shadow:var(--shadow-md); }
+  .owner-dropdown { position:absolute; top:calc(100% + 4px); right:0; background:#fff; border:1px solid var(--border); border-radius:10px; box-shadow:var(--shadow-lg); min-width:120px; display:none; z-index:50; overflow:hidden; }
+  .owner-dropdown.open { display:block; }
+  .owner-item { padding:10px 14px; font-size:12px; font-weight:700; color:var(--text); cursor:pointer; transition:background .15s; }
+  .owner-item:hover { background:#eff6ff; color:#1e40af; }
+  .owner-item.active { background:#dbeafe; color:#1e40af; }
+  .chat-name-btn { padding:6px 15px; border-radius:20px; border:1px solid transparent; cursor:pointer; font-size:12px; font-weight:800; background:#fff; color:var(--text); transition:all .15s; user-select:none; box-shadow:var(--shadow-sm), inset 0 1px 0 rgba(255,255,255,0.3); text-shadow:0 1px 1px rgba(0,0,0,0.1); }
+  .chat-name-btn:hover { transform:translateY(-1px); box-shadow:var(--shadow-md); filter:brightness(1.05); }
+  .chat-name-btn:active { transform:translateY(0); }
+  .chat-name-btn[data-name="오세훈"] { background:linear-gradient(180deg,#3b82f6 0%,#1e40af 100%); color:#fff; }
+  .chat-name-btn[data-name="구자천"] { background:linear-gradient(180deg,#22c55e 0%,#15803d 100%); color:#fff; }
+  .chat-name-btn[data-name="공석민"] { background:linear-gradient(180deg,#ef4444 0%,#b91c1c 100%); color:#fff; }
+  .chat-name-btn.active-peer { outline:3px solid #1f2937; outline-offset:1px; }
+  .chat-all-btn { padding:6px 15px; border-radius:20px; border:1px solid var(--border); cursor:pointer; font-size:12px; font-weight:800; background:linear-gradient(180deg,#fff 0%,#f3f4f6 100%); color:var(--text); transition:all .15s; box-shadow:var(--shadow-sm), inset 0 1px 0 #fff; }
+  .chat-all-btn:hover { transform:translateY(-1px); box-shadow:var(--shadow-md); }
+  .chat-all-btn.active-all { background:linear-gradient(180deg,#22c55e 0%,#15803d 100%); color:#fff; border-color:#15803d; text-shadow:0 1px 1px rgba(0,0,0,0.15); }
+  .chat-messages { flex:1; overflow-y:auto; padding:12px; display:flex; flex-direction:column; gap:8px; background:linear-gradient(180deg,#4b5563 0%,#374151 100%); }
+  .msg-sender { font-size:10px; color:#9ca3af; font-weight:600; }
+  .msg-bubble { padding:9px 13px; border-radius:14px; font-size:12px; line-height:1.5; word-break:break-word; box-shadow:var(--shadow-sm); }
+  .msg.mine .msg-bubble { border-bottom-right-radius:4px; }
+  .msg.theirs .msg-bubble { border-bottom-left-radius:4px; }
+  .owner-bubble { background:linear-gradient(180deg,#fde047 0%,#facc15 100%); color:#1f2937; font-weight:600; }
+  .other-bubble { background:#ffffff; color:#1f2937; }
+  .msg-bubble img { max-width:200px; max-height:200px; border-radius:8px; display:block; cursor:pointer; }
+  .msg-time { font-size:10px; color:#9ca3af; }
+  .chat-input-area { padding:12px; border-top:1px solid #1f2937; display:flex; gap:10px; align-items:center; background:#1f1f1f; border-radius:0 0 12px 12px; }
+  .chat-input-area textarea { flex:1; padding:8px 14px; border:none; border-radius:24px; background:#2d2d2d; color:#fff; font-size:13px; resize:none; outline:none; height:40px; line-height:1.6; font-family:inherit; font-weight:600; }
+  .chat-input-area textarea::placeholder { color:#9ca3af; font-weight:500; }
+  .chat-input-area textarea:focus { background:#3a3a3a; }
+
+  /* + 버튼 - 카톡 스타일 (어두운 회색 원형) */
+  .plus-menu-wrap { position:relative; flex-shrink:0; }
+  .plus-btn { width:40px; height:40px; border-radius:50%; background:#3a3a3a; color:#fff; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .15s; padding:0; }
+  .plus-btn:hover { background:#4a4a4a; }
+  .plus-btn.open { background:#3b82f6; color:#fff; transform:rotate(45deg); }
+  .plus-btn svg { display:block; }
+  .plus-menu { position:absolute; bottom:calc(100% + 8px); left:0; background:#2d2d2d; border:1px solid #3a3a3a; border-radius:12px; box-shadow:0 8px 20px rgba(0,0,0,0.4); padding:6px; display:none; z-index:60; min-width:140px; }
+  .plus-menu.open { display:block; animation:popIn 0.15s ease-out; }
+  @keyframes popIn { from { opacity:0; transform:translateY(6px) scale(0.95); } to { opacity:1; transform:translateY(0) scale(1); } }
+  .plus-menu-item { display:flex; align-items:center; gap:10px; width:100%; padding:9px 12px; border:none; background:transparent; color:#fff; font-size:13px; font-weight:600; cursor:pointer; border-radius:8px; text-align:left; transition:background .12s; }
+  .plus-menu-item:hover { background:#3a3a3a; }
+  .plus-menu-item svg { flex-shrink:0; color:#facc15; }
+
+  /* 카카오 스타일 전송 버튼 - 노란 원형 */
+  .kakao-send-btn { width:40px; height:40px; border-radius:50%; background:#facc15; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all .15s; padding:0; box-shadow:0 2px 6px rgba(250,204,21,0.35); }
+  .kakao-send-btn:hover { background:#eab308; transform:scale(1.05); }
+  .kakao-send-btn:active { transform:scale(0.95); }
+  .kakao-send-btn svg { display:block; }
+  .unread-badge { display:inline-block; background:#ef4444; color:#fff; border-radius:10px; font-size:10px; font-weight:700; padding:1px 5px; margin-left:2px; line-height:14px; box-shadow:var(--shadow-sm); }
+  .chat-empty { text-align:center; color:#9ca3af; font-size:12px; margin:auto; line-height:1.8; }
+
+  /* Modal */
+  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.5); backdrop-filter:blur(3px); display:flex; align-items:center; justify-content:center; z-index:100; padding:16px; }
+  .modal-overlay.hidden { display:none; }
+  .modal { background:#fff; border-radius:16px; padding:24px; width:100%; max-width:480px; box-shadow:0 20px 60px rgba(0,0,0,0.25); max-height:92vh; overflow-y:auto; border:1px solid rgba(255,255,255,0.5); }
+  .modal h2 { font-size:17px; font-weight:800; margin-bottom:18px; color:#1e40af; padding-bottom:10px; border-bottom:2px solid #e0e7ff; }
+  .form-group { margin-bottom:14px; }
+  .form-group label { display:block; font-size:11px; font-weight:800; color:#3b82f6; margin-bottom:6px; letter-spacing:.03em; text-transform:uppercase; }
+  .sub-label { font-size:10px; font-weight:700; color:var(--text2); margin-bottom:4px; }
+  .form-group input, .form-group select, .form-group textarea { width:100%; padding:9px 11px; border:1px solid #d1d9e6; border-radius:8px; background:#fafcff; color:var(--text); font-size:13px; outline:none; font-family:inherit; transition:all .15s; box-shadow:var(--shadow-inset); }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color:var(--accent); background:#fff; box-shadow:var(--shadow-inset), 0 0 0 3px rgba(59,130,246,0.15); }
+  .form-group textarea { resize:vertical; min-height:80px; line-height:1.5; }
+  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  /* 시간 시/분 분리 */
+  .time-split { display:flex; align-items:center; gap:6px; }
+  .time-split .time-part { flex:1; padding:9px 8px; border:1px solid #d1d9e6; border-radius:8px; background:#fafcff; font-size:14px; font-weight:600; text-align:center; color:var(--text); outline:none; cursor:pointer; box-shadow:var(--shadow-inset); transition:all .15s; }
+  .time-split .time-part:focus { border-color:var(--accent); background:#fff; box-shadow:var(--shadow-inset), 0 0 0 3px rgba(59,130,246,0.15); }
+  .time-split .time-colon { font-size:16px; font-weight:800; color:var(--text2); }
+  /* 장소(작게) + 현장명(크게) */
+  .form-row-loc { display:grid; grid-template-columns:110px 1fr; gap:10px; }
+  .form-row-loc > div > label { display:block; font-size:11px; font-weight:800; color:#3b82f6; margin-bottom:6px; text-transform:uppercase; }
+  /* 하루 종일 체크박스 */
+  .checkbox-row { display:flex; align-items:center; gap:8px; cursor:pointer; padding:8px 12px; background:linear-gradient(180deg,#eff6ff 0%,#dbeafe 100%); border:1px solid #bfdbfe; border-radius:8px; font-size:12px; font-weight:700; color:#1e40af; user-select:none; transition:all .15s; box-shadow:var(--shadow-sm), inset 0 1px 0 rgba(255,255,255,0.5); }
+  .checkbox-row:hover { background:linear-gradient(180deg,#dbeafe 0%,#bfdbfe 100%); }
+  .checkbox-row input[type="checkbox"] { width:15px; height:15px; cursor:pointer; accent-color:var(--accent); }
+  .modal-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:20px; padding-top:16px; border-top:1px solid #e5e7eb; }
+  .emp-chips { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:6px; }
+  .emp-chip { padding:6px 15px; border-radius:20px; border:1px solid var(--border); cursor:pointer; font-size:12px; font-weight:700; background:linear-gradient(180deg,#fff 0%,#f3f4f6 100%); color:var(--text2); transition:all .15s; box-shadow:var(--shadow-sm), inset 0 1px 0 #fff; }
+  .emp-chip:hover { transform:translateY(-1px); box-shadow:var(--shadow-md); }
+  .emp-chip.active-oh{ background:linear-gradient(180deg,#3b82f6 0%,#1e40af 100%); color:#fff; border-color:#1e40af; text-shadow:0 1px 1px rgba(0,0,0,0.15); }
+  .emp-chip.active-gjc{ background:linear-gradient(180deg,#22c55e 0%,#15803d 100%); color:#fff; border-color:#15803d; text-shadow:0 1px 1px rgba(0,0,0,0.15); }
+  .emp-chip.active-gsm{ background:linear-gradient(180deg,#ef4444 0%,#b91c1c 100%); color:#fff; border-color:#b91c1c; text-shadow:0 1px 1px rgba(0,0,0,0.15); }
+  .form-row.hidden { display:none; }
+  /* 이미지 전체보기 오버레이 */
+  .img-overlay { position:fixed; inset:0; background:rgba(0,0,0,.85); display:flex; align-items:center; justify-content:center; z-index:300; cursor:zoom-out; }
+  .img-overlay.hidden { display:none; }
+  .img-overlay img { max-width:90vw; max-height:90vh; border-radius:8px; }
+
+  .chat-panel-header .user-chip { background:rgba(255,255,255,0.15); border-color:rgba(255,255,255,0.3); color:#fff; }
+  .chat-panel-header .user-chip.active-oh  { background:#dbeafe; color:#1e40af; border-color:#93c5fd; }
+  .chat-panel-header .user-chip.active-gjc { background:#dcfce7; color:#166534; border-color:#86efac; }
+  .chat-panel-header .user-chip.active-gsm { background:#fce7f3; color:#9d174d; border-color:#f9a8d4; }
+  .add-peer-row { display:flex; gap:5px; margin-top:8px; }
+  .add-peer-row input { flex:1; padding:4px 8px; border:1px solid rgba(255,255,255,0.4); border-radius:6px; font-size:11px; background:rgba(255,255,255,0.15); color:#fff; outline:none; }
+  .add-peer-row input::placeholder { color:rgba(255,255,255,0.5); }
+  .add-peer-row input:focus { border-color:#fff; }
+  .add-peer-row button { padding:4px 10px; border-radius:6px; border:none; background:#22c55e; color:#fff; font-size:11px; cursor:pointer; }
+  .add-peer-row button:hover { background:#16a34a; }
+  .add-peer-form { display:none; }
+  .add-peer-form.open { display:block; }
+
+  /* Config */
+  .config-banner { background:#fef9c3; border:1px solid #fbbf24; border-radius:var(--radius); padding:10px 14px; margin-bottom:14px; font-size:12px; color:#713f12; }
+  .config-banner.hidden { display:none; }
+  .config-inputs { display:flex; gap:6px; margin-top:7px; flex-wrap:wrap; }
+  .config-inputs input { flex:1; min-width:160px; padding:5px 8px; border:1px solid #fbbf24; border-radius:4px; font-size:11px; background:#fff; }
+  .toast { position:fixed; bottom:20px; right:20px; background:#1e293b; color:#fff; padding:10px 16px; border-radius:var(--radius); font-size:12px; z-index:200; opacity:0; transform:translateY(8px); transition:all .25s; pointer-events:none; }
+  .toast.show { opacity:1; transform:translateY(0); }
+  .spinner { display:inline-block; width:13px; height:13px; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin .6s linear infinite; vertical-align:middle; margin-right:4px; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  @media(max-width:640px){
+    .cal-cell{min-height:40px;padding:2px;} .cal-event{display:none;}
+    .form-row{grid-template-columns:1fr;} table{min-width:400px;}
+    .chat-panel{height:420px;position:static;}
+  }
+</style>
+</head>
+<body>
+<div id="toast" class="toast"></div>
+
+<div id="configBanner" class="config-banner">
+  <strong>⚙️ Supabase 설정 필요</strong> — Project URL과 anon key를 입력 후 저장하세요.
+  <div class="config-inputs">
+    <input type="text" id="cfgUrl" placeholder="https://xxxx.supabase.co">
+    <input type="text" id="cfgKey" placeholder="eyJh... (anon key)">
+    <button class="btn primary" onclick="saveConfig()">저장</button>
+  </div>
+</div>
+
+<div class="app">
+  <div class="app-grid">
+    <div class="left-col">
+      <div class="header">
+        <h1>
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+          직원 일정 공유
+        </h1>
+      </div>
+
+      <div class="user-bar" style="display:none">
+        <span>나는:</span>
+        <div class="user-chip" data-name="구자천" onclick="setMe(this)">구자천</div>
+        <div class="user-chip" data-name="공석민" onclick="setMe(this)">공석민</div>
+        <div class="user-chip" data-name="오세훈" onclick="setMe(this)">오세훈</div>
+      </div>
+
+      <div class="legend" style="display:none">
+        <div class="legend-item"><div class="legend-dot dot-gjc"></div> 구자천</div>
+        <div class="legend-item"><div class="legend-dot dot-gsm"></div> 공석민</div>
+        <div class="legend-item"><div class="legend-dot dot-oh"></div> 오세훈</div>
+      </div>
+
+      <div class="section-header">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        세부 일정 내용
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="text-align:center" class="col-emp">구분</th>
+              <th style="text-align:center" class="col-date">일자</th>
+              <th style="text-align:center" class="col-time">시간</th>
+              <th style="text-align:center" class="col-loc">장소</th>
+              <th style="text-align:center" class="col-site">현장명</th>
+              <th style="text-align:center;width:220px" class="col-purpose">목적</th>
+              <th style="text-align:center" class="col-manage">관리</th>
+              <th style="text-align:center;width:50px;display:none" class="col-check">
+                <input type="checkbox" id="checkAll" onclick="toggleAllChecks(this)" style="cursor:pointer">
+              </th>
+            </tr>
+          </thead>
+          <tbody id="scheduleBody">
+            <tr class="empty-row"><td colspan="7"><span class="spinner"></span> 불러오는 중...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div id="bulkActionBar" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:8px 12px;margin-bottom:12px;align-items:center;justify-content:space-between;">
+        <span style="font-size:12px;font-weight:600;color:#1e40af"><span id="checkedCount">0</span>건 선택됨</span>
+        <button class="btn" onclick="deleteChecked()" style="color:#b91c1c;border-color:#fecaca" title="선택 삭제">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+          선택 삭제
+        </button>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+        <div class="month-nav">
+          <button class="nav-btn" onclick="changeMonth(-1)">&#8249;</button>
+          <span id="monthLabel"></span>
+          <button class="nav-btn" onclick="changeMonth(1)">&#8250;</button>
+        </div>
+        <small id="calCount" style="color:var(--text2)">이번 달 0건</small>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;border-bottom:2px solid var(--border);padding-bottom:8px;">
+        <div class="section-header" style="border:none;margin:0;padding:0;">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+          월간 일정표
+        </div>
+        <div style="display:flex;gap:12px;align-items:center;">
+          <div style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2)"><div style="width:12px;height:12px;border-radius:3px;background:var(--gjc-cal)"></div> 구자천</div>
+          <div style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2)"><div style="width:12px;height:12px;border-radius:3px;background:var(--gsm-cal)"></div> 공석민</div>
+          <div style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2)"><div style="width:12px;height:12px;border-radius:3px;background:var(--oh-cal)"></div> 오세훈</div>
+        </div>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+    </div>
+
+    <!-- 오른쪽: 채팅 패널 -->
+    <div class="right-col">
+      <div class="chat-panel">
+        <div class="chat-panel-header">
+          <div class="room-title-row" style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:0;padding-bottom:0;border-bottom:none;">
+            <span class="room-title">🎱 509 단톡방</span>
+            <div style="position:relative;">
+              <button class="owner-btn" id="ownerBtn" onclick="toggleOwnerDropdown(event)">
+                <span id="ownerBtnLabel">방장선택</span>
+                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" style="margin-left:4px"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="owner-dropdown" id="ownerDropdown">
+                <div class="owner-item" onclick="setOwner('구자천')">구자천</div>
+                <div class="owner-item" onclick="setOwner('공석민')">공석민</div>
+                <div class="owner-item" onclick="setOwner('오세훈')">오세훈</div>
+              </div>
+            </div>
+          </div>
+          <div id="peerSelect" style="display:none;"></div>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+          <div class="chat-empty">먼저 <b>방장선택</b>으로<br>본인을 선택해주세요</div>
+        </div>
+        <div class="chat-input-area">
+          <input type="file" id="imgInputGallery" accept="image/*" style="display:none" onchange="sendImage(this)">
+          <input type="file" id="imgInputCamera" accept="image/*" capture="camera" style="display:none" onchange="sendImage(this)">
+          <div class="plus-menu-wrap">
+            <button class="plus-btn" id="plusBtn" onclick="togglePlusMenu(event)" title="첨부">
+              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+            </button>
+            <div class="plus-menu" id="plusMenu">
+              <button class="plus-menu-item" onclick="closePlusMenu();document.getElementById('imgInputGallery').click()">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                <span>갤러리</span>
+              </button>
+              <button class="plus-menu-item" onclick="closePlusMenu();document.getElementById('imgInputCamera').click()">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                <span>사진 촬영</span>
+              </button>
+            </div>
+          </div>
+          <textarea id="chatInput" placeholder="메시지 입력..." onkeydown="handleKey(event)"></textarea>
+          <button class="kakao-send-btn" onclick="sendMessage()" title="전송">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#000" xmlns="http://www.w3.org/2000/svg">
+              <path d="M6 4.5v15c0 .8.9 1.3 1.6.9l12.4-7.5c.6-.4.6-1.3 0-1.7L7.6 3.6c-.7-.5-1.6 0-1.6.9z"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 이미지 전체보기 -->
+<div class="img-overlay hidden" id="imgOverlay" onclick="this.classList.add('hidden')">
+  <img id="imgOverlayImg" src="" alt="">
+</div>
+
+<!-- 모바일 FAB (채팅 열기 버튼) -->
+<button class="chat-fab hidden-badge" id="chatFab" onclick="openMobileChat()">
+  <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+  <span class="fab-badge" id="fabBadge">0</span>
+</button>
+
+<!-- 모바일 채팅 팝업 -->
+<div class="mobile-chat-overlay" id="mobileChatOverlay" onclick="closeMobileChatOnBg(event)">
+  <div class="mobile-chat-container" id="mobileChatContainer">
+    <!-- 여기에 채팅 패널이 동적으로 이동됨 -->
+  </div>
+</div>
+
+<!-- 일정 상세 팝업 -->
+<div class="modal-overlay hidden" id="detailModal">
+  <div class="modal" style="max-width:440px">
+    <h2 id="detailTitle" style="display:flex;align-items:center;gap:10px">
+      <span id="detailPill"></span>
+      일정 상세
+    </h2>
+    <div style="display:grid;grid-template-columns:100px 1fr;gap:10px 14px;font-size:13px;line-height:1.6;padding:6px 0 12px">
+      <div style="color:#3b82f6;font-weight:800">게시자</div><div id="detEmp">-</div>
+      <div style="color:#3b82f6;font-weight:800">일자</div><div id="detDate">-</div>
+      <div style="color:#3b82f6;font-weight:800">시간</div><div id="detTime">-</div>
+      <div style="color:#3b82f6;font-weight:800">장소</div><div id="detLoc">-</div>
+      <div style="color:#3b82f6;font-weight:800">현장명</div><div id="detSite">-</div>
+      <div style="color:#3b82f6;font-weight:800;align-self:flex-start;padding-top:2px">목적</div><div id="detPurpose" style="white-space:pre-wrap">-</div>
+    </div>
+    <div class="modal-actions" style="justify-content:space-between">
+      <button class="btn" onclick="closeDetail()">닫기</button>
+      <div style="display:flex;gap:6px">
+        <button class="btn" onclick="editFromDetail()" style="background:linear-gradient(180deg,#3b82f6 0%,#1d4ed8 100%);color:#fff;border-color:transparent">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          수정
+        </button>
+        <button class="btn" onclick="deleteFromDetail()" style="background:linear-gradient(180deg,#ef4444 0%,#b91c1c 100%);color:#fff;border-color:transparent">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+          삭제
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 일정 추가/수정 모달 -->
+<div class="modal-overlay hidden" id="modalOverlay">
+  <div class="modal">
+    <h2 id="modalTitle">일정 추가</h2>
+    <input type="hidden" id="editId">
+
+    <div class="form-group">
+      <label>담당자 <span style="color:#dc2626">*</span></label>
+      <div class="emp-chips" id="empChips">
+        <div class="emp-chip" data-name="구자천" onclick="selectEmp(this)">구자천</div>
+        <div class="emp-chip" data-name="공석민" onclick="selectEmp(this)">공석민</div>
+        <div class="emp-chip" data-name="오세훈" onclick="selectEmp(this)">오세훈</div>
+      </div>
+      <input type="hidden" id="fEmployee">
+      <div id="empWarn" style="display:none;color:#dc2626;font-size:11px;margin-top:5px;font-weight:600;">⚠ 담당자를 먼저 선택해주세요</div>
+    </div>
+
+    <!-- 일자 3분할 -->
+    <div class="form-group" id="dateSection">
+      <label>일자</label>
+      <div class="form-row" style="margin-bottom:7px;">
+        <div><div class="sub-label">시작일</div><input type="date" id="fDate" onchange="onDateStartChange()"></div>
+        <div><div class="sub-label">종료일</div><input type="date" id="fDateEnd"></div>
+      </div>
+      <label class="checkbox-row">
+        <input type="checkbox" id="fAllDay" onchange="toggleAllDay()">
+        <span>하루 종일</span>
+      </label>
+    </div>
+
+    <!-- 시간 -->
+    <div class="form-row" id="timeRow">
+      <div class="form-group">
+        <label>시작 시간</label>
+        <div class="time-split">
+          <select id="fStartHour" class="time-part"></select>
+          <span class="time-colon">:</span>
+          <select id="fStartMin" class="time-part"></select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>종료 시간</label>
+        <div class="time-split">
+          <select id="fEndHour" class="time-part"></select>
+          <span class="time-colon">:</span>
+          <select id="fEndMin" class="time-part"></select>
+        </div>
+      </div>
+    </div>
+
+    <!-- 장소 + 현장명 한 줄 -->
+    <div class="form-group" id="locSection">
+      <div class="form-row-loc">
+        <div>
+          <label>장소</label>
+          <select id="fLocation">
+            <option value="">선택</option>
+            <option value="현장">현장</option>
+            <option value="본사">본사</option>
+            <option value="외근">외근</option>
+            <option value="연차">연차</option>
+            <option value="휴가">휴가</option>
+            <option value="출장">출장</option>
+          </select>
+        </div>
+        <div>
+          <label>현장명</label>
+          <input type="text" id="fSite" placeholder="예: 아크로 리버스카이(조합)">
+        </div>
+      </div>
+    </div>
+
+    <!-- 목적 (textarea) -->
+    <div class="form-group" id="purposeSection">
+      <label>목적</label>
+      <textarea id="fPurpose" rows="3" placeholder="예: 신규 TM 장비 설치 및 교육"></textarea>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">취소</button>
+      <button class="btn primary" id="saveBtn" onclick="saveSchedule()">저장</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── 직원 정의 (기본) ──────────────────────────────────────
+const BASE_EMPLOYEES = {
+  '오세훈': { pillClass:'pill-oh',  calClass:'oh',  activeClass:'active-oh' },
+  '구자천': { pillClass:'pill-gjc', calClass:'gjc', activeClass:'active-gjc' },
+  '공석민': { pillClass:'pill-gsm', calClass:'gsm', activeClass:'active-gsm' },
+};
+
+// 추가 대화상대 (localStorage에 저장)
+let extraPeers = JSON.parse(localStorage.getItem('sched_extra_peers') || '[]');
+
+function getEmpInfo(name) {
+  return BASE_EMPLOYEES[name] || { pillClass:'pill-gsm', calClass:'gsm', activeClass:'active-gsm' };
+}
+function getEmpNames() { return Object.keys(BASE_EMPLOYEES); }
+
+// ── 상태 ──────────────────────────────────────────────────
+let SUPABASE_URL = localStorage.getItem('sched_url') || '';
+let SUPABASE_KEY = localStorage.getItem('sched_key') || '';
+let allSchedules = [];
+let currentYear  = new Date().getFullYear();
+let currentMonth = new Date().getMonth();
+let currentUser  = localStorage.getItem('sched_me') || '';
+let currentPeer  = '';
+let isAllChat    = false;
+let chatPollTimer = null;
+let addPeerOpen  = false;
+
+// ── Config ───────────────────────────────────────────────
+function checkConfig() {
+  const ok = !!(SUPABASE_URL && SUPABASE_KEY);
+  document.getElementById('configBanner').classList.toggle('hidden', ok);
+  return ok;
+}
+function saveConfig() {
+  const url = document.getElementById('cfgUrl').value.trim().replace(/\/$/, '');
+  const key = document.getElementById('cfgKey').value.trim();
+  if (!url || !key) { showToast('URL과 Key를 모두 입력하세요'); return; }
+  SUPABASE_URL = url; SUPABASE_KEY = key;
+  localStorage.setItem('sched_url', url);
+  localStorage.setItem('sched_key', key);
+  checkConfig(); showToast('저장되었습니다'); init();
+}
+
+// ── 나 선택 ───────────────────────────────────────────────
+function setMe(name) {
+  // 호환용: name 문자열을 받아 본인 설정
+  currentUser = typeof name === 'string' ? name : name.dataset.name;
+  localStorage.setItem('sched_me', currentUser);
+  currentPeer = '';
+  isAllChat = false;
+  renderChatMessages([]);
+  buildPeerButtons();
+  startChatPoll();
+}
+
+// ── 방장 선택 (드롭다운) ──────────────────────────────────
+function toggleOwnerDropdown(e) {
+  e.stopPropagation();
+  document.getElementById('ownerDropdown').classList.toggle('open');
+}
+function setOwner(name) {
+  currentUser = name;
+  localStorage.setItem('sched_me', name);
+  document.getElementById('ownerBtnLabel').textContent = name;
+  document.getElementById('ownerDropdown').classList.remove('open');
+  document.querySelectorAll('.owner-item').forEach(i => {
+    i.classList.toggle('active', i.textContent.trim() === name);
+  });
+  // 단톡방 모드로 자동 진입
+  currentPeer = '';
+  isAllChat = true;
+  loadGroupChat();
+  startChatPoll();
+  showToast(name + '(으)로 설정되었습니다');
+}
+// 바깥 클릭 시 드롭다운 닫기
+document.addEventListener('click', function(e) {
+  const dd = document.getElementById('ownerDropdown');
+  if (dd && !e.target.closest('#ownerBtn') && !e.target.closest('#ownerDropdown')) {
+    dd.classList.remove('open');
+  }
+});
+
+// ── 채팅 대화상대 버튼 ────────────────────────────────────
+function buildPeerButtons() {
+  // 본인 버튼은 비활성 표시, 나머지는 클릭 가능
+  document.querySelectorAll('#peerSelect .chat-name-btn').forEach(b => {
+    const n = b.dataset.name;
+    b.className = 'chat-name-btn';
+    if (currentUser && n === currentUser) {
+      b.style.opacity = '0.3';
+      b.style.cursor = 'not-allowed';
+      b.title = '본인입니다';
+    } else {
+      b.style.opacity = '1';
+      b.style.cursor = 'pointer';
+      b.title = '';
+      if (currentPeer === n && !isAllChat) b.classList.add('active-peer');
+    }
+  });
+  const allBtn = document.getElementById('chatAllBtn');
+  if (allBtn) allBtn.className = 'chat-all-btn' + (isAllChat ? ' active-all' : '');
+  updateUnreadBadges();
+}
+
+async function selectChatTarget(name) {
+  // 본인 미설정 시
+  if (!currentUser) {
+    showToast('먼저 우측 상단 "방장선택"으로 본인을 선택하세요');
+    return;
+  }
+  // 전체
+  if (name === '__ALL__') {
+    isAllChat = true;
+    currentPeer = '';
+    buildPeerButtons();
+    await loadAllChat();
+    return;
+  }
+  // 본인을 선택한 경우
+  if (name === currentUser) {
+    showToast('본인입니다. 다른 사람을 선택하세요');
+    return;
+  }
+  isAllChat = false;
+  currentPeer = name;
+  buildPeerButtons();
+  await markRead();
+  await loadChat();
+  updateUnreadBadges();
+}
+
+// ── API ──────────────────────────────────────────────────
+async function apiReq(path, method='GET', body=null) {
+  const opts = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Prefer': method==='POST' ? 'return=representation' : '',
+    }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(`${SUPABASE_URL}/rest/v1${path}`, opts);
+  if (!res.ok) throw new Error(await res.text());
+  const t = await res.text();
+  return t ? JSON.parse(t) : [];
+}
+
+// ── 일정 ─────────────────────────────────────────────────
+async function loadSchedules() {
+  if (!checkConfig()) { renderTable([]); renderCalendar([]); return; }
+  try {
+    const data = await apiReq('/schedules?select=*&order=date.asc,time_start.asc');
+    allSchedules = data; renderTable(data); renderCalendar(data);
+  } catch(e) { showToast('일정 로드 실패: '+e.message); renderTable([]); }
+}
+
+function renderTable(data) {
+  const tbody = document.getElementById('scheduleBody');
+  const mobile = window.innerWidth <= 860;
+  if (!data.length) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="${mobile?6:7}">등록된 일정이 없습니다</td></tr>`;
+    return;
+  }
+  if (mobile) {
+    // 모바일: 구분 / MM-DD / 시 / 현장명 / 목적 / 체크박스
+    tbody.innerHTML = data.map(s => {
+      const emp = getEmpInfo(s.employee);
+      let dateStr = '';
+      if (s.date) {
+        const parts = s.date.split('-');
+        dateStr = parts.length >= 3 ? parts[1]+'-'+parts[2] : s.date;
+      }
+      let timeStr = '';
+      if (s.time_start && s.time_end) {
+        timeStr = s.time_start.split(':')[0] + '시~' + s.time_end.split(':')[0] + '시';
+      } else if (s.time_start) {
+        timeStr = s.time_start.split(':')[0] + '시';
+      } else {
+        timeStr = '종일';
+      }
+      return `<tr class="clickable-row" onclick="showDetailPopup('${s.id}', event)">
+        <td style="text-align:center"><span class="pill ${emp.pillClass}">${escHtml(s.employee)}</span></td>
+        <td style="white-space:nowrap;text-align:center;font-weight:600">${dateStr}</td>
+        <td style="white-space:nowrap;text-align:center">${timeStr}</td>
+        <td style="text-align:center">${escHtml(s.site_name||'')}</td>
+        <td>${escHtml(s.purpose||'')}</td>
+        <td style="text-align:center" onclick="event.stopPropagation()">
+          <input type="checkbox" class="row-check" data-id="${s.id}" onclick="onRowCheck()" style="cursor:pointer;width:16px;height:16px">
+        </td>
+      </tr>`;
+    }).join('');
+    const chk = document.getElementById('checkAll'); if (chk) chk.checked = false;
+    updateBulkBar();
+  } else {
+    // 웹: 기존 구조 그대로
+    tbody.innerHTML = data.map(s => {
+      const emp = getEmpInfo(s.employee);
+      const time = s.time_start && s.time_end ? s.time_start+'~'+s.time_end : (s.time_start||'');
+      return `<tr>
+        <td style="text-align:center"><span class="pill ${emp.pillClass}">${escHtml(s.employee)}</span></td>
+        <td style="white-space:nowrap;text-align:center">${s.date||''}</td>
+        <td style="white-space:nowrap;text-align:center">${time}</td>
+        <td style="text-align:center"><span class="loc-badge">${escHtml(s.location||'')}</span></td>
+        <td style="text-align:center">${escHtml(s.site_name||'')}</td>
+        <td>${escHtml(s.purpose||'')}</td>
+        <td style="text-align:center;white-space:nowrap">
+          <button class="action-btn" onclick="editSchedule('${s.id}')" title="수정" style="padding:4px 6px;margin:0 1px">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button class="action-btn del" onclick="deleteSchedule('${s.id}')" title="삭제" style="padding:4px 6px;margin:0 1px">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+          </button>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+}
+
+function renderCalendar(data) {
+  document.getElementById('monthLabel').textContent = currentYear+'년 '+(currentMonth+1)+'월';
+  const monthData = data.filter(s => {
+    if (!s.date) return false;
+    const p = s.date.split('-').map(Number);
+    return p[0]===currentYear && p[1]===currentMonth+1;
+  });
+  document.getElementById('calCount').textContent = '이번 달 '+monthData.length+'건';
+  const days = ['일','월','화','수','목','금','토'];
+  let html = days.map((d,i) =>
+    `<div class="cal-head ${i===0?'sun':i===6?'sat':''}">${d}</div>`
+  ).join('');
+  const first = new Date(currentYear,currentMonth,1).getDay();
+  const total = new Date(currentYear,currentMonth+1,0).getDate();
+  const today = new Date();
+  for (let i=0;i<first;i++) {
+    const pd=new Date(currentYear,currentMonth,-first+i+1);
+    html+=`<div class="cal-cell other-month"><span class="cal-num" style="color:#aab">${pd.getDate()}</span></div>`;
+  }
+  for (let d=1;d<=total;d++) {
+    const isToday=today.getFullYear()===currentYear&&today.getMonth()===currentMonth&&today.getDate()===d;
+    const dow=new Date(currentYear,currentMonth,d).getDay();
+    const dateStr=currentYear+'-'+String(currentMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    const evts=monthData.filter(s=>s.date===dateStr);
+    const numCls='cal-num'+(isToday?' today':dow===0?' sun-color':dow===6?' sat-color':'');
+    let evtsHtml=evts.slice(0,3).map(s=>{
+      const cl=getEmpInfo(s.employee).calClass;
+      const label=escHtml(s.site_name||s.purpose||s.employee);
+      return `<div class="cal-event ${cl}" title="${escHtml(s.employee)}: ${escHtml(s.site_name||s.purpose||'')}">${label}</div>`;
+    }).join('');
+    if(evts.length>3) evtsHtml+=`<div style="font-size:10px;color:var(--text2)">+${evts.length-3}</div>`;
+    html+=`<div class="cal-cell" style="cursor:pointer" onclick="openModalWithDate('${dateStr}')"><span class="${numCls}">${d}</span>${evtsHtml}</div>`;
+  }
+  const remain=(7-(first+total)%7)%7;
+  for(let i=1;i<=remain;i++) html+=`<div class="cal-cell other-month"><span class="cal-num" style="color:#aab">${i}</span></div>`;
+  document.getElementById('calGrid').innerHTML=html;
+}
+
+function changeMonth(d) {
+  currentMonth+=d;
+  if(currentMonth>11){currentMonth=0;currentYear++;}
+  if(currentMonth<0){currentMonth=11;currentYear--;}
+  renderCalendar(allSchedules);
+}
+
+// ── 일정 CRUD ─────────────────────────────────────────────
+function openModal(prefill=null) {
+  document.getElementById('modalTitle').textContent = prefill?'일정 수정':'일정 추가';
+  document.getElementById('editId').value = prefill?prefill.id:'';
+  document.getElementById('fEmployee').value = prefill?prefill.employee:'';
+  document.getElementById('fDate').value = prefill?prefill.date:'';
+  document.getElementById('fDateEnd').value = prefill?(prefill.date_end||prefill.date||''):'';
+  setTime('fStartHour','fStartMin', prefill?(prefill.time_start||''):'');
+  setTime('fEndHour','fEndMin', prefill?(prefill.time_end||''):'');
+  document.getElementById('fLocation').value = prefill?(prefill.location||''):'';
+  document.getElementById('fSite').value = prefill?(prefill.site_name||''):'';
+  document.getElementById('fPurpose').value = prefill?(prefill.purpose||''):'';
+  // 하루 종일 체크 (시간이 비어있으면 자동 체크)
+  const isAllDay = prefill && !prefill.time_start && !prefill.time_end;
+  document.getElementById('fAllDay').checked = !!isAllDay;
+  toggleAllDay();
+  document.querySelectorAll('.emp-chip').forEach(c => {
+    c.className='emp-chip';
+    if(prefill&&c.dataset.name===prefill.employee) c.classList.add(getEmpInfo(prefill.employee).activeClass);
+  });
+  document.getElementById('empWarn').style.display = 'none';
+  updateModalLock();
+  document.getElementById('modalOverlay').classList.remove('hidden');
+}
+
+function updateModalLock() {
+  const emp = document.getElementById('fEmployee').value;
+  const sections = ['dateSection','timeRow','locSection','purposeSection'];
+  sections.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (!emp) {
+      el.style.opacity = '0.4';
+      el.style.pointerEvents = 'none';
+    } else {
+      el.style.opacity = '1';
+      el.style.pointerEvents = 'auto';
+    }
+  });
+}
+
+function onDateStartChange() {
+  const start = document.getElementById('fDate').value;
+  const end = document.getElementById('fDateEnd').value;
+  // 종료일이 비어있거나, 시작일보다 빠르면 시작일과 동일하게 설정
+  if (!end || end < start) {
+    document.getElementById('fDateEnd').value = start;
+  }
+}
+
+function toggleAllDay() {
+  const checked = document.getElementById('fAllDay').checked;
+  const els = ['fStartHour','fStartMin','fEndHour','fEndMin'].map(id=>document.getElementById(id));
+  if (checked) {
+    els.forEach(el => {
+      el.value = '';
+      el.disabled = true;
+      el.style.background = '#e5e7eb';
+      el.style.cursor = 'not-allowed';
+      el.style.color = '#9ca3af';
+    });
+  } else {
+    els.forEach(el => {
+      el.disabled = false;
+      el.style.background = '';
+      el.style.cursor = '';
+      el.style.color = '';
+    });
+  }
+}
+
+function closeModal() { document.getElementById('modalOverlay').classList.add('hidden'); }
+
+function selectEmp(el) {
+  document.querySelectorAll('.emp-chip').forEach(c=>c.className='emp-chip');
+  el.classList.add(getEmpInfo(el.dataset.name).activeClass);
+  document.getElementById('fEmployee').value=el.dataset.name;
+  document.getElementById('empWarn').style.display = 'none';
+  updateModalLock();
+}
+
+function openModalWithDate(dateStr) {
+  openModal(null);
+  document.getElementById('fDate').value = dateStr;
+  document.getElementById('fDateEnd').value = dateStr;
+}
+
+async function saveSchedule() {
+  const id=document.getElementById('editId').value;
+  const emp=document.getElementById('fEmployee').value;
+  const date=document.getElementById('fDate').value;
+  const dateEnd=document.getElementById('fDateEnd').value;
+  if(!emp){
+    document.getElementById('empWarn').style.display = 'block';
+    showToast('담당자를 먼저 선택하세요');
+    return;
+  }
+  if(!date){showToast('시작일을 입력하세요');return;}
+  const allDay=document.getElementById('fAllDay').checked;
+  const payload={
+    employee:emp, date,
+    date_end: dateEnd || date,
+    time_start: allDay ? null : (getTime('fStartHour','fStartMin')||null),
+    time_end: allDay ? null : (getTime('fEndHour','fEndMin')||null),
+    location:document.getElementById('fLocation').value||null,
+    site_name:document.getElementById('fSite').value||null,
+    purpose:document.getElementById('fPurpose').value||null,
+  };
+  const btn=document.getElementById('saveBtn');
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span> 저장 중...';
+  try {
+    try {
+      if(id) await apiReq('/schedules?id=eq.'+id,'PATCH',payload);
+      else   await apiReq('/schedules','POST',payload);
+    } catch(e) {
+      // date_end 컬럼이 없으면 제거하고 재시도
+      if(String(e.message).includes('date_end')){
+        delete payload.date_end;
+        if(id) await apiReq('/schedules?id=eq.'+id,'PATCH',payload);
+        else   await apiReq('/schedules','POST',payload);
+      } else {
+        throw e;
+      }
+    }
+    showToast(id?'수정되었습니다':'추가되었습니다');
+    closeModal(); await loadSchedules();
+  } catch(e){
+    showToast('저장 실패: '+e.message);
+  }
+  finally{btn.disabled=false;btn.innerHTML='저장';}
+}
+function closeModal() { document.getElementById('modalOverlay').classList.add('hidden'); }
+function editSchedule(id){const s=allSchedules.find(x=>x.id===id);if(s)openModal(s);}
+async function deleteSchedule(id){
+  if(!confirm('이 일정을 삭제하시겠습니까?'))return;
+  try{await apiReq('/schedules?id=eq.'+id,'DELETE');showToast('삭제되었습니다');await loadSchedules();}
+  catch(e){showToast('삭제 실패: '+e.message);}
+}
+
+// ── 상세 팝업 ─────────────────────────────────────
+let currentDetailId = null;
+function showDetailPopup(id, event) {
+  const s = allSchedules.find(x => x.id === id);
+  if (!s) return;
+  currentDetailId = id;
+  const emp = getEmpInfo(s.employee);
+  document.getElementById('detailPill').outerHTML = `<span id="detailPill" class="pill ${emp.pillClass}">${escHtml(s.employee)}</span>`;
+  document.getElementById('detEmp').textContent = s.employee;
+  // 일자: 전체 표시 (팝업이므로)
+  let dateStr = s.date || '';
+  if (s.date_end && s.date_end !== s.date) dateStr += ' ~ ' + s.date_end;
+  document.getElementById('detDate').textContent = dateStr;
+  // 시간
+  let timeStr = '';
+  if (s.time_start && s.time_end) timeStr = s.time_start + ' ~ ' + s.time_end;
+  else if (s.time_start) timeStr = s.time_start;
+  else timeStr = '하루 종일';
+  document.getElementById('detTime').textContent = timeStr;
+  document.getElementById('detLoc').textContent = s.location || '-';
+  document.getElementById('detSite').textContent = s.site_name || '-';
+  document.getElementById('detPurpose').textContent = s.purpose || '-';
+  document.getElementById('detailModal').classList.remove('hidden');
+}
+function closeDetail() {
+  document.getElementById('detailModal').classList.add('hidden');
+  currentDetailId = null;
+}
+function editFromDetail() {
+  const id = currentDetailId;
+  closeDetail();
+  if (id) editSchedule(id);
+}
+async function deleteFromDetail() {
+  const id = currentDetailId;
+  if (!id) return;
+  if (!confirm('이 일정을 삭제하시겠습니까?')) return;
+  closeDetail();
+  try { await apiReq('/schedules?id=eq.'+id, 'DELETE'); showToast('삭제되었습니다'); await loadSchedules(); }
+  catch(e) { showToast('삭제 실패: '+e.message); }
+}
+
+// ── 체크박스 일괄 처리 ────────────────────────────
+function toggleAllChecks(masterCheckbox) {
+  const rows = document.querySelectorAll('.row-check');
+  rows.forEach(cb => cb.checked = masterCheckbox.checked);
+  updateBulkBar();
+}
+function onRowCheck() {
+  const boxes = document.querySelectorAll('.row-check');
+  const checked = document.querySelectorAll('.row-check:checked');
+  document.getElementById('checkAll').checked = boxes.length > 0 && checked.length === boxes.length;
+  updateBulkBar();
+}
+function updateBulkBar() {
+  const checked = document.querySelectorAll('.row-check:checked');
+  const bar = document.getElementById('bulkActionBar');
+  if (checked.length > 0) {
+    bar.style.display = 'flex';
+    document.getElementById('checkedCount').textContent = checked.length;
+  } else {
+    bar.style.display = 'none';
+  }
+}
+async function deleteChecked() {
+  const checked = Array.from(document.querySelectorAll('.row-check:checked'));
+  if (!checked.length) return;
+  if (!confirm(`선택한 ${checked.length}건을 삭제하시겠습니까?`)) return;
+  try {
+    for (const cb of checked) {
+      await apiReq('/schedules?id=eq.'+cb.dataset.id, 'DELETE');
+    }
+    showToast(`${checked.length}건 삭제되었습니다`);
+    await loadSchedules();
+  } catch(e) { showToast('삭제 실패: '+e.message); }
+}
+
+// 상세 모달 배경 클릭 시 닫기
+document.addEventListener('click', function(e) {
+  if (e.target.id === 'detailModal') closeDetail();
+});
+
+// ── 채팅 ─────────────────────────────────────────────────
+async function loadChat(){
+  if(!currentUser||!currentPeer||!checkConfig())return;
+  try{
+    const q='/chats?or=(and(sender.eq.'+encodeURIComponent(currentUser)+',receiver.eq.'+encodeURIComponent(currentPeer)+'),and(sender.eq.'+encodeURIComponent(currentPeer)+',receiver.eq.'+encodeURIComponent(currentUser)+'))&order=created_at.asc&limit=100';
+    const data=await apiReq(q);
+    renderChatMessages(data);
+  }catch(e){console.error('채팅 로드 실패',e);}
+}
+function getBilliard(name) {
+  const map = {'오세훈':{n:'5',cls:'billiard-5'}, '공석민':{n:'0',cls:'billiard-0'}, '구자천':{n:'9',cls:'billiard-9'}};
+  const b = map[name];
+  if (!b) return '';
+  return `<span class="billiard ${b.cls}" title="${name}"><span class="billiard-inner">${b.n}</span></span>`;
+}
+
+function renderChatMessages(data){
+  const box=document.getElementById('chatMessages');
+  if(!currentPeer){box.innerHTML='<div class="chat-empty">나와 대화 상대를<br>위에서 선택하세요</div>';return;}
+  if(!data.length){box.innerHTML='<div class="chat-empty">아직 대화가 없습니다<br><small style="color:var(--text2)">첫 메시지를 보내보세요</small></div>';return;}
+  box.innerHTML=data.map(m=>{
+    // 방장(currentUser) 메시지는 왼쪽(theirs), 나머지는 오른쪽(mine)
+    const isOwner=m.sender===currentUser;
+    const side = isOwner ? 'theirs' : 'mine';
+    const t=new Date(m.created_at);
+    const ts=String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0');
+    let bubbleContent;
+    if(m.message.startsWith('data:image/')){
+      bubbleContent=`<img src="${m.message}" alt="이미지" onclick="viewImg(this.src)">`;
+    } else {
+      bubbleContent=escHtml(m.message);
+    }
+    const ball = getBilliard(m.sender);
+    return `<div class="msg ${side}">
+      <div class="msg-row">
+        ${ball}
+        <div style="display:flex;flex-direction:column;gap:2px;${side==='mine'?'align-items:flex-end;':''}">
+          <div class="msg-bubble">${bubbleContent}</div>
+          <div class="msg-time">${ts}</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  box.scrollTop=box.scrollHeight;
+}
+async function sendMessage(){
+  if(!currentUser){showToast('먼저 방장선택으로 본인을 선택하세요');return;}
+  const input=document.getElementById('chatInput');
+  const msg=input.value.trim();
+  if(!msg)return;
+  input.value='';
+  try{
+    await apiReq('/chats','POST',{sender:currentUser,receiver:'__GROUP__',message:msg,is_read:false});
+    await loadGroupChat();
+  }catch(e){showToast('전송 실패: '+e.message);input.value=msg;}
+}
+async function sendImage(input){
+  if(!currentUser){showToast('먼저 방장선택으로 본인을 선택하세요');input.value='';return;}
+  const file=input.files[0];
+  if(!file)return;
+  const MAX=1.5*1024*1024;
+  const reader=new FileReader();
+  reader.onload=async function(e){
+    let dataUrl=e.target.result;
+    if(file.size>MAX){
+      dataUrl=await resizeImage(dataUrl,800);
+    }
+    try{
+      await apiReq('/chats','POST',{sender:currentUser,receiver:'__GROUP__',message:dataUrl,is_read:false});
+      await loadGroupChat();
+    }catch(err){showToast('이미지 전송 실패: '+err.message);}
+    input.value='';
+  };
+  reader.readAsDataURL(file);
+}
+
+function resizeImage(dataUrl,maxW){
+  return new Promise(resolve=>{
+    const img=new Image();
+    img.onload=function(){
+      const scale=Math.min(1,maxW/img.width);
+      const canvas=document.createElement('canvas');
+      canvas.width=img.width*scale;
+      canvas.height=img.height*scale;
+      canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
+      resolve(canvas.toDataURL('image/jpeg',0.75));
+    };
+    img.src=dataUrl;
+  });
+}
+
+function viewImg(src){
+  document.getElementById('imgOverlayImg').src=src;
+  document.getElementById('imgOverlay').classList.remove('hidden');
+}
+async function markRead(){
+  if(!currentUser||!currentPeer)return;
+  try{await apiReq('/chats?sender=eq.'+encodeURIComponent(currentPeer)+'&receiver=eq.'+encodeURIComponent(currentUser)+'&is_read=eq.false','PATCH',{is_read:true});}catch(e){}
+}
+function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}}
+
+function togglePlusMenu(e) {
+  e.stopPropagation();
+  const btn = document.getElementById('plusBtn');
+  const menu = document.getElementById('plusMenu');
+  const isOpen = menu.classList.toggle('open');
+  btn.classList.toggle('open', isOpen);
+}
+function closePlusMenu() {
+  document.getElementById('plusBtn').classList.remove('open');
+  document.getElementById('plusMenu').classList.remove('open');
+}
+document.addEventListener('click', function(e) {
+  const menu = document.getElementById('plusMenu');
+  if (menu && !e.target.closest('#plusBtn') && !e.target.closest('#plusMenu')) {
+    closePlusMenu();
+  }
+});
+
+async function updateUnreadBadges(){
+  if(!currentUser||!checkConfig())return;
+  const peers=getEmpNames().filter(n=>n!==currentUser);
+  for(const peer of peers){
+    try{
+      const data=await apiReq('/chats?sender=eq.'+encodeURIComponent(peer)+'&receiver=eq.'+encodeURIComponent(currentUser)+'&is_read=eq.false&select=id');
+      const badge=document.getElementById('badge-'+peer);
+      if(badge)badge.innerHTML=data.length>0?'<span class="unread-badge">'+data.length+'</span>':'';
+    }catch(e){}
+  }
+}
+let lastSeenMsgCount = 0;
+
+async function loadGroupChat(){
+  if(!currentUser||!checkConfig())return;
+  try{
+    const q='/chats?receiver=eq.__GROUP__&order=created_at.asc&limit=200';
+    const data=await apiReq(q);
+    renderGroupChat(data);
+    // 모바일 FAB 뱃지 업데이트 (팝업이 닫혀있을 때만)
+    updateFabBadge(data);
+  }catch(e){console.error('단톡방 로드 실패',e);}
+}
+
+function updateFabBadge(data) {
+  const overlay = document.getElementById('mobileChatOverlay');
+  const fab = document.getElementById('chatFab');
+  const badge = document.getElementById('fabBadge');
+  if (!fab || !badge) return;
+  // 다른 사람이 보낸 메시지 개수 카운트
+  const othersCount = data.filter(m => m.sender !== currentUser).length;
+  // 팝업이 열려있으면 → 뱃지 리셋 + 마지막 카운트 저장
+  if (overlay.classList.contains('open')) {
+    lastSeenMsgCount = othersCount;
+    fab.classList.add('hidden-badge');
+    return;
+  }
+  // 팝업이 닫힌 상태에서 새 메시지가 있는지
+  const unread = othersCount - lastSeenMsgCount;
+  if (unread > 0) {
+    badge.textContent = unread > 99 ? '99+' : unread;
+    fab.classList.remove('hidden-badge');
+  } else {
+    fab.classList.add('hidden-badge');
+  }
+}
+
+function renderGroupChat(data){
+  const box=document.getElementById('chatMessages');
+  if(!data.length){box.innerHTML='<div class="chat-empty">아직 대화가 없습니다<br><small style="color:var(--text2)">첫 메시지를 보내보세요</small></div>';return;}
+  box.innerHTML=data.map(m=>{
+    // 방장(currentUser) 메시지는 왼쪽, 나머지는 오른쪽
+    const isOwner=m.sender===currentUser;
+    const side = isOwner ? 'theirs' : 'mine';
+    const t=new Date(m.created_at);
+    const ts=String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0');
+    let bubbleContent;
+    if(m.message.startsWith('data:image/')){
+      bubbleContent=`<img src="${m.message}" alt="이미지" onclick="viewImg(this.src)">`;
+    } else {
+      bubbleContent=escHtml(m.message);
+    }
+    const ball = getBilliard(m.sender);
+    const bubbleClass = isOwner ? 'msg-bubble owner-bubble' : 'msg-bubble other-bubble';
+    return `<div class="msg ${side}">
+      ${!isOwner?'<div class="msg-sender">'+escHtml(m.sender)+'</div>':''}
+      <div class="msg-row">
+        ${ball}
+        <div style="display:flex;flex-direction:column;gap:2px;${side==='mine'?'align-items:flex-end;':''}">
+          <div class="${bubbleClass}">${bubbleContent}</div>
+          <div class="msg-time">${ts}</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  box.scrollTop=box.scrollHeight;
+}
+
+async function loadAllChat(){
+  if(!currentUser||!checkConfig())return;
+  try{
+    const peers=getEmpNames().filter(n=>n!==currentUser);
+    let allMsgs=[];
+    for(const peer of peers){
+      const q='/chats?or=(and(sender.eq.'+encodeURIComponent(currentUser)+',receiver.eq.'+encodeURIComponent(peer)+'),and(sender.eq.'+encodeURIComponent(peer)+',receiver.eq.'+encodeURIComponent(currentUser)+'))&order=created_at.asc&limit=50';
+      const data=await apiReq(q);
+      allMsgs=allMsgs.concat(data);
+    }
+    allMsgs.sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+    renderAllChatMessages(allMsgs);
+  }catch(e){console.error('전체 채팅 로드 실패',e);}
+}
+
+function renderAllChatMessages(data){
+  const box=document.getElementById('chatMessages');
+  if(!data.length){box.innerHTML='<div class="chat-empty">대화 내역이 없습니다</div>';return;}
+  box.innerHTML=data.map(m=>{
+    // 방장(currentUser) 메시지는 왼쪽(theirs), 나머지는 오른쪽(mine)
+    const isOwner=m.sender===currentUser;
+    const side = isOwner ? 'theirs' : 'mine';
+    const t=new Date(m.created_at);
+    const ts=String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0');
+    let bubbleContent;
+    if(m.message.startsWith('data:image/')){
+      bubbleContent=`<img src="${m.message}" alt="이미지" onclick="viewImg(this.src)">`;
+    } else {
+      bubbleContent=escHtml(m.message);
+    }
+    const ball = getBilliard(m.sender);
+    return `<div class="msg ${side}">
+      <div class="msg-row">
+        ${ball}
+        <div style="display:flex;flex-direction:column;gap:2px;${side==='mine'?'align-items:flex-end;':''}">
+          <div class="msg-bubble">${bubbleContent}</div>
+          <div class="msg-time">${ts}</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  box.scrollTop=box.scrollHeight;
+}
+
+function startChatPoll(){
+  clearInterval(chatPollTimer);
+  chatPollTimer=setInterval(async()=>{
+    if(currentUser) await loadGroupChat();
+  },5000);
+}
+
+// ── 다운로드 ──────────────────────────────────────────────
+function exportCSV(){
+  if(!allSchedules.length){showToast('다운로드할 데이터가 없습니다');return;}
+  const rows=[['구분','일자','시작시간','종료시간','장소','현장명','목적']];
+  allSchedules.forEach(s=>rows.push([s.employee,s.date,s.time_start||'',s.time_end||'',s.location||'',s.site_name||'',s.purpose||'']));
+  const csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='일정표_'+currentYear+String(currentMonth+1).padStart(2,'0')+'.csv';
+  a.click();URL.revokeObjectURL(a.href);
+  showToast('다운로드 완료');
+}
+
+// ── Util ──────────────────────────────────────────────────
+function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+let toastTimer;
+function showToast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2800);
+}
+
+function init(){checkConfig();renderCalendar([]);loadSchedules();buildPeerButtons();startChatPoll();setupMobileChat();}
+
+// ── 모바일 채팅 처리 ─────────────────────────────
+let isMobileView = window.innerWidth <= 860;
+
+function setupMobileChat() {
+  // 초기 배치
+  applyChatLayout();
+  // 리사이즈 대응
+  window.addEventListener('resize', () => {
+    const newMobile = window.innerWidth <= 860;
+    if (newMobile !== isMobileView) {
+      isMobileView = newMobile;
+      applyChatLayout();
+      // 테이블도 웹/모바일 구조가 다르므로 재렌더
+      if (allSchedules && allSchedules.length !== undefined) renderTable(allSchedules);
+    }
+  });
+}
+
+function applyChatLayout() {
+  const chatPanel = document.querySelector('.chat-panel');
+  const rightCol = document.querySelector('.right-col');
+  const mobileContainer = document.getElementById('mobileChatContainer');
+  if (!chatPanel) return;
+
+  if (isMobileView) {
+    // 모바일: chat-panel을 mobile container로 이동
+    if (chatPanel.parentElement !== mobileContainer) {
+      mobileContainer.innerHTML = '';
+      // 닫기 버튼 추가
+      const closeBtn = document.createElement('button');
+      closeBtn.className = 'mobile-chat-close';
+      closeBtn.onclick = closeMobileChat;
+      closeBtn.innerHTML = '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+      mobileContainer.appendChild(chatPanel);
+      chatPanel.appendChild(closeBtn); // 상단 오른쪽에 붙음
+      chatPanel.style.height = '100%';
+      chatPanel.style.minHeight = '0';
+      chatPanel.style.margin = '0';
+      chatPanel.style.borderRadius = '16px 16px 0 0';
+    }
+  } else {
+    // 데스크톱: chat-panel을 원래 자리로 복귀
+    if (chatPanel.parentElement !== rightCol) {
+      // 닫기 버튼 제거
+      const closeBtn = chatPanel.querySelector('.mobile-chat-close');
+      if (closeBtn) closeBtn.remove();
+      rightCol.appendChild(chatPanel);
+      chatPanel.style.height = '';
+      chatPanel.style.minHeight = '';
+      chatPanel.style.margin = '';
+      chatPanel.style.borderRadius = '';
+      // 팝업이 열려있었으면 닫음
+      document.getElementById('mobileChatOverlay').classList.remove('open');
+    }
+  }
+}
+
+function openMobileChat() {
+  document.getElementById('mobileChatOverlay').classList.add('open');
+  document.getElementById('chatFab').classList.add('hidden-badge');
+  // 다음 폴링에서 뱃지 리셋되도록 다시 loadGroupChat 호출
+  if (currentUser) loadGroupChat();
+  // 스크롤 맨 아래로
+  setTimeout(() => {
+    const box = document.getElementById('chatMessages');
+    if (box) box.scrollTop = box.scrollHeight;
+  }, 100);
+}
+
+function closeMobileChat() {
+  document.getElementById('mobileChatOverlay').classList.remove('open');
+}
+
+function closeMobileChatOnBg(e) {
+  if (e.target.id === 'mobileChatOverlay') closeMobileChat();
+}
+
+document.getElementById('modalOverlay').addEventListener('click',function(e){if(e.target===this)closeModal();});
+function buildTimeOptions() {
+  // 시간: 08 ~ 18
+  const buildHours = (id) => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    let html = '<option value="">--</option>';
+    for (let h = 8; h <= 18; h++) {
+      const v = String(h).padStart(2,'0');
+      html += `<option value="${v}">${v}</option>`;
+    }
+    sel.innerHTML = html;
+  };
+  // 분: 00, 30
+  const buildMins = (id) => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    sel.innerHTML = '<option value="">--</option><option value="00">00</option><option value="30">30</option>';
+  };
+  buildHours('fStartHour'); buildMins('fStartMin');
+  buildHours('fEndHour');   buildMins('fEndMin');
+}
+buildTimeOptions();
+
+// 시/분 조합 → time 문자열 얻기 & 세팅
+function getTime(hourId, minId) {
+  const h = document.getElementById(hourId).value;
+  const m = document.getElementById(minId).value;
+  if (!h && !m) return '';
+  return (h || '00') + ':' + (m || '00');
+}
+function setTime(hourId, minId, timeStr) {
+  if (!timeStr) {
+    document.getElementById(hourId).value = '';
+    document.getElementById(minId).value = '';
+    return;
+  }
+  const parts = timeStr.split(':');
+  document.getElementById(hourId).value = parts[0] || '';
+  document.getElementById(minId).value = (parts[1] === '30' ? '30' : '00');
+}
+
+if(SUPABASE_URL)document.getElementById('cfgUrl').value=SUPABASE_URL;
+if(SUPABASE_KEY)document.getElementById('cfgKey').value=SUPABASE_KEY;
+if(currentUser){
+  document.getElementById('ownerBtnLabel').textContent = currentUser;
+  document.querySelectorAll('.owner-item').forEach(i => {
+    if (i.textContent.trim() === currentUser) i.classList.add('active');
+  });
+  isAllChat = true;
+  loadGroupChat();
+  startChatPoll();
+}
+init();
+</script>
+</body>
+</html>
