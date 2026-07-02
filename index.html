@@ -34,24 +34,40 @@
     table { min-width:0 !important; table-layout:fixed; width:100% !important; }
     /* 모바일에서만 특정 헤더 표시/숨김 */
     .col-loc, .col-manage { display:none !important; }
-    .col-check-header { display:table-cell !important; }
-    /* 모바일 컬럼 너비 지정 - 현장명 넓게 */
-    .col-emp { width:56px !important; }
-    .col-date { width:52px !important; }
-    .col-time { width:64px !important; }
-    .col-site { width:auto !important; }
-    .col-purpose { width:32% !important; }
+    /* 모바일 컬럼 너비 지정 - 5개 컬럼 화면 꽉 채움 */
+    .col-emp { width:16% !important; }
+    .col-date { width:16% !important; }
+    .col-time { width:19% !important; }
+    .col-site { width:22% !important; }
+    .col-purpose { width:27% !important; }
     /* 헤더/셀 폰트 & 패딩 축소 */
     thead th { font-size:11px !important; padding:7px 3px !important; }
     tbody td { font-size:11px !important; padding:6px 3px !important; word-break:break-all; }
     .pill { font-size:10px !important; padding:2px 7px !important; }
-    /* 달력 셀 크기 */
-    .cal-cell { min-height:52px; padding:3px; }
-    .cal-event { font-size:9px; padding:1px 3px; }
+    /* 달력 셀 크기 - 이벤트 표시 공간 확보 */
+    .cal-cell { min-height:58px; padding:3px 2px; }
+    .cal-event { font-size:9px; padding:1px 3px; margin-bottom:1px; border-radius:2px; }
     /* 헤더 폰트 축소 */
     .header h1 { font-size:16px; }
-    /* 페이지 여백 축소 */
-    .app { padding:10px; }
+    /* 페이지 여백 최소화 - 화면 꽉 차게 */
+    .app { padding:8px; }
+    .header { margin:0 0 12px 0 !important; padding:12px 14px !important; }
+    /* 일정 추가 팝업 - 화면에 맞게 축소 */
+    .modal-overlay { padding:8px; align-items:flex-start; padding-top:12px; }
+    .modal { padding:16px !important; max-height:95vh; }
+    .modal h2 { font-size:15px !important; margin-bottom:10px !important; padding-bottom:6px !important; }
+    .modal .form-group { margin-bottom:9px !important; }
+    .modal .form-group label { font-size:10px !important; margin-bottom:3px !important; }
+    .modal .form-group input, .modal .form-group select, .modal .form-group textarea { padding:6px 8px !important; font-size:12px !important; }
+    .modal .form-group textarea { min-height:50px !important; }
+    .modal .sub-label { font-size:9px !important; margin-bottom:2px !important; }
+    .modal .checkbox-row { padding:5px 10px !important; font-size:11px !important; }
+    .modal .checkbox-row input[type="checkbox"] { width:13px !important; height:13px !important; }
+    .modal .form-row { gap:8px !important; }
+    .modal .time-split .time-part { padding:6px 4px !important; font-size:12px !important; }
+    .modal .emp-chip { padding:4px 12px !important; font-size:11px !important; }
+    .modal-actions { margin-top:12px !important; padding-top:10px !important; }
+    .modal .btn { padding:6px 12px !important; font-size:12px !important; }
   }
   /* 웹에서는 벌크바 숨김 */
   @media(min-width:861px){
@@ -321,11 +337,6 @@
   .toast.show { opacity:1; transform:translateY(0); }
   .spinner { display:inline-block; width:13px; height:13px; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin .6s linear infinite; vertical-align:middle; margin-right:4px; }
   @keyframes spin { to { transform:rotate(360deg); } }
-  @media(max-width:640px){
-    .cal-cell{min-height:40px;padding:2px;} .cal-event{display:none;}
-    .form-row{grid-template-columns:1fr;} table{min-width:400px;}
-    .chat-panel{height:420px;position:static;}
-  }
 </style>
 </head>
 <body>
@@ -378,7 +389,6 @@
               <th style="text-align:center" class="col-site">현장명</th>
               <th style="text-align:center;width:220px" class="col-purpose">목적</th>
               <th style="text-align:center" class="col-manage">관리</th>
-              <th class="col-check-header" style="display:none;width:32px;padding:6px 2px !important;background:linear-gradient(180deg,#dbeafe 0%,#bfdbfe 100%);border-bottom:2px solid #93c5fd;border-right:none;"></th>
             </tr>
           </thead>
           <tbody id="scheduleBody">
@@ -767,11 +777,11 @@ function renderTable(data) {
   const tbody = document.getElementById('scheduleBody');
   const mobile = window.innerWidth <= 860;
   if (!data.length) {
-    tbody.innerHTML = `<tr class="empty-row"><td colspan="${mobile?6:7}">등록된 일정이 없습니다</td></tr>`;
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="${mobile?5:7}">등록된 일정이 없습니다</td></tr>`;
     return;
   }
   if (mobile) {
-    // 모바일: 구분 / MM-DD / 시 / 현장명 / 목적 / 체크박스
+    // 모바일: 구분 / MM-DD / 시 / 현장명 / 목적 (체크박스 없음, 행 클릭시 상세 팝업)
     tbody.innerHTML = data.map(s => {
       const emp = getEmpInfo(s.employee);
       let dateStr = '';
@@ -793,15 +803,11 @@ function renderTable(data) {
         <td style="white-space:nowrap;text-align:center">${timeStr}</td>
         <td style="text-align:center">${escHtml(s.site_name||'')}</td>
         <td>${escHtml(s.purpose||'')}</td>
-        <td style="text-align:center" onclick="event.stopPropagation()">
-          <input type="checkbox" class="row-check" data-id="${s.id}" onclick="onRowCheck()" style="cursor:pointer;width:16px;height:16px">
-        </td>
       </tr>`;
     }).join('');
-    const chk = document.getElementById('checkAll'); if (chk) chk.checked = false;
     updateBulkBar();
   } else {
-    // 웹: 기존 구조 그대로
+    // 웹: 기존 구조 그대로 (7개 컬럼)
     tbody.innerHTML = data.map(s => {
       const emp = getEmpInfo(s.employee);
       const time = s.time_start && s.time_end ? s.time_start+'~'+s.time_end : (s.time_start||'');
