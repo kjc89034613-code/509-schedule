@@ -34,7 +34,7 @@
     table { min-width:0 !important; table-layout:fixed; width:100% !important; }
     /* 모바일에서만 특정 헤더 표시/숨김 */
     .col-loc, .col-manage { display:none !important; }
-    .col-check { display:table-cell !important; }
+    .col-check-header { display:table-cell !important; }
     /* 모바일 컬럼 너비 지정 - 현장명 넓게 */
     .col-emp { width:56px !important; }
     .col-date { width:52px !important; }
@@ -66,16 +66,16 @@
   .chat-fab.hidden-badge .fab-badge { display:none; }
 
   /* 모바일 채팅 팝업 오버레이 */
-  .mobile-chat-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:90; align-items:flex-end; justify-content:center; animation:fadeIn .2s ease-out; }
+  .mobile-chat-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:90; align-items:stretch; justify-content:center; animation:fadeIn .2s ease-out; }
   .mobile-chat-overlay.open { display:flex; }
   @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
-  .mobile-chat-container { width:100%; max-width:500px; height:90vh; background:#fff; border-radius:16px 16px 0 0; display:flex; flex-direction:column; overflow:hidden; animation:slideUp .25s ease-out; position:relative; }
+  .mobile-chat-container { width:100%; max-width:none; height:100vh; background:#fff; border-radius:0; display:flex; flex-direction:column; overflow:hidden; animation:slideUp .25s ease-out; position:relative; }
   @keyframes slideUp { from{transform:translateY(100%);} to{transform:translateY(0);} }
   .mobile-chat-close { position:absolute; top:14px; right:14px; width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,0.2); border:none; cursor:pointer; color:#fff; display:flex; align-items:center; justify-content:center; z-index:100; }
   .mobile-chat-close:hover { background:rgba(255,255,255,0.35); }
   /* 모바일 팝업 안의 채팅 패널 조정 */
-  .mobile-chat-container .chat-panel { border:none; box-shadow:none; height:100%; min-height:0; margin:0; border-radius:16px 16px 0 0; }
-  .mobile-chat-container .chat-panel-header { padding-right:56px; }
+  .mobile-chat-container .chat-panel { border:none; box-shadow:none; height:100%; min-height:0; margin:0; border-radius:0; }
+  .mobile-chat-container .chat-panel-header { padding-right:56px; border-radius:0; }
 
   /* Header - 입체적 */
   .header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:8px; background:linear-gradient(135deg,#1e40af 0%,#1e3a8a 50%,#312e81 100%); padding:14px 18px; border-radius:12px; box-shadow:var(--shadow-lg), inset 0 1px 0 rgba(255,255,255,0.15); min-height:56px; }
@@ -378,7 +378,7 @@
               <th style="text-align:center" class="col-site">현장명</th>
               <th style="text-align:center;width:220px" class="col-purpose">목적</th>
               <th style="text-align:center" class="col-manage">관리</th>
-              <th style="text-align:center;width:32px;display:none;padding:6px 2px !important;" class="col-check"></th>
+              <th class="col-check-header" style="display:none;width:32px;padding:6px 2px !important;background:linear-gradient(180deg,#dbeafe 0%,#bfdbfe 100%);border-bottom:2px solid #93c5fd;border-right:none;"></th>
             </tr>
           </thead>
           <tbody id="scheduleBody">
@@ -1398,16 +1398,15 @@ function applyChatLayout() {
       closeBtn.onclick = closeMobileChat;
       closeBtn.innerHTML = '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>';
       mobileContainer.appendChild(chatPanel);
-      chatPanel.appendChild(closeBtn); // 상단 오른쪽에 붙음
+      chatPanel.appendChild(closeBtn);
       chatPanel.style.height = '100%';
       chatPanel.style.minHeight = '0';
       chatPanel.style.margin = '0';
-      chatPanel.style.borderRadius = '16px 16px 0 0';
+      chatPanel.style.borderRadius = '0';
     }
   } else {
     // 데스크톱: chat-panel을 원래 자리로 복귀
     if (chatPanel.parentElement !== rightCol) {
-      // 닫기 버튼 제거
       const closeBtn = chatPanel.querySelector('.mobile-chat-close');
       if (closeBtn) closeBtn.remove();
       rightCol.appendChild(chatPanel);
@@ -1415,7 +1414,6 @@ function applyChatLayout() {
       chatPanel.style.minHeight = '';
       chatPanel.style.margin = '';
       chatPanel.style.borderRadius = '';
-      // 팝업이 열려있었으면 닫음
       document.getElementById('mobileChatOverlay').classList.remove('open');
     }
   }
