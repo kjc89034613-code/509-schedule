@@ -29,18 +29,29 @@
     .right-col { display:none; }
     /* FAB 채팅 버튼 표시 */
     .chat-fab { display:flex !important; }
-    /* 모바일에서 세부일정 스크롤 여유 */
-    .table-wrap { max-height:240px; }
+    /* 모바일 - 테이블이 화면에 딱 맞도록 */
+    .table-wrap { max-height:280px; overflow-x:hidden; }
+    table { min-width:0 !important; table-layout:fixed; width:100% !important; }
     /* 모바일에서만 특정 헤더 표시/숨김 */
     .col-loc, .col-manage { display:none !important; }
     .col-check { display:table-cell !important; }
+    /* 모바일 컬럼 너비 지정 - 현장명 넓게 */
+    .col-emp { width:56px !important; }
+    .col-date { width:52px !important; }
+    .col-time { width:64px !important; }
+    .col-site { width:auto !important; }
+    .col-purpose { width:32% !important; }
+    /* 헤더/셀 폰트 & 패딩 축소 */
+    thead th { font-size:11px !important; padding:7px 3px !important; }
+    tbody td { font-size:11px !important; padding:6px 3px !important; word-break:break-all; }
+    .pill { font-size:10px !important; padding:2px 7px !important; }
     /* 달력 셀 크기 */
     .cal-cell { min-height:52px; padding:3px; }
     .cal-event { font-size:9px; padding:1px 3px; }
     /* 헤더 폰트 축소 */
     .header h1 { font-size:16px; }
     /* 페이지 여백 축소 */
-    .app { padding:12px; }
+    .app { padding:10px; }
   }
   /* 웹에서는 벌크바 숨김 */
   @media(min-width:861px){
@@ -367,9 +378,7 @@
               <th style="text-align:center" class="col-site">현장명</th>
               <th style="text-align:center;width:220px" class="col-purpose">목적</th>
               <th style="text-align:center" class="col-manage">관리</th>
-              <th style="text-align:center;width:50px;display:none" class="col-check">
-                <input type="checkbox" id="checkAll" onclick="toggleAllChecks(this)" style="cursor:pointer">
-              </th>
+              <th style="text-align:center;width:32px;display:none;padding:6px 2px !important;" class="col-check"></th>
             </tr>
           </thead>
           <tbody id="scheduleBody">
