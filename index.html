@@ -54,9 +54,8 @@
     .table-wrap { max-height:190px !important; margin-bottom:8px !important; }
     .section-header { font-size:13px !important; padding:4px 0 6px 0 !important; margin-bottom:4px !important; }
     /* 달력 네비게이션 컴팩트 - 월간 일정표 위 간격 축소 */
-    .month-nav { margin-bottom:4px !important; }
-    .month-nav span { font-size:13px !important; }
-    .nav-btn { width:26px !important; height:26px !important; }
+    .month-nav-inline span { font-size:12px !important; min-width:70px !important; }
+    .nav-btn-mini { width:20px !important; height:20px !important; }
     /* 월간 일정표 헤더와 legend 위쪽 여백 축소 */
     .left-col > div[style*="margin-bottom:10px"] { margin-bottom:4px !important; }
     /* 달력 셀 크기 - 화면 폭에 맞춰 자동 축소 */
@@ -208,6 +207,11 @@
   .nav-btn { width:30px; height:30px; display:flex; align-items:center; justify-content:center; border:1px solid var(--border); border-radius:8px; background:linear-gradient(180deg,#fff 0%,#f3f4f6 100%); cursor:pointer; font-size:15px; font-weight:700; box-shadow:var(--shadow-sm), inset 0 1px 0 #fff; transition:all .15s; }
   .nav-btn:hover { background:linear-gradient(180deg,#f9fafb 0%,#e5e7eb 100%); transform:translateY(-1px); box-shadow:var(--shadow-md); }
   .nav-btn:active { transform:translateY(0); }
+  /* 월간 일정표 옆에 붙는 컴팩트 네비 */
+  .month-nav-inline { display:inline-flex; align-items:center; gap:5px; padding:2px 6px; background:#f8fafc; border:1px solid var(--border); border-radius:8px; }
+  .month-nav-inline span { font-size:13px; font-weight:700; min-width:78px; text-align:center; color:var(--text); }
+  .nav-btn-mini { width:22px; height:22px; display:flex; align-items:center; justify-content:center; border:1px solid var(--border); border-radius:6px; background:#fff; cursor:pointer; font-size:12px; font-weight:700; padding:0; transition:all .15s; }
+  .nav-btn-mini:hover { background:#eff6ff; border-color:#93c5fd; color:#1e40af; }
 
   /* Calendar */
   .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:1px; background:var(--border); border:1px solid var(--border); border-radius:12px; overflow:hidden; margin-bottom:20px; box-shadow:var(--shadow-md); }
@@ -517,18 +521,17 @@
         </button>
       </div>
 
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
-        <div class="month-nav">
-          <button class="nav-btn" onclick="changeMonth(-1)">&#8249;</button>
-          <span id="monthLabel"></span>
-          <button class="nav-btn" onclick="changeMonth(1)">&#8250;</button>
-        </div>
-        <small id="calCount" style="color:var(--text2)">이번 달 0건</small>
-      </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;border-bottom:2px solid var(--border);padding-bottom:8px;">
-        <div class="section-header" style="border:none;margin:0;padding:0;">
-          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-          월간 일정표
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;border-bottom:2px solid var(--border);padding-bottom:8px;flex-wrap:wrap;gap:8px;">
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+          <div class="section-header" style="border:none;margin:0;padding:0;">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            월간 일정표
+          </div>
+          <div class="month-nav-inline">
+            <button class="nav-btn-mini" onclick="changeMonth(-1)">&#8249;</button>
+            <span id="monthLabel"></span>
+            <button class="nav-btn-mini" onclick="changeMonth(1)">&#8250;</button>
+          </div>
         </div>
         <div style="display:flex;gap:12px;align-items:center;">
           <div style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2)"><div style="width:12px;height:12px;border-radius:3px;background:var(--gjc-cal)"></div> 구자천</div>
@@ -635,11 +638,12 @@
       <span id="detailPill"></span>
       일정 상세
     </h2>
-    <div style="display:grid;grid-template-columns:100px 1fr;gap:10px 14px;font-size:13px;line-height:1.6;padding:6px 0 12px">
+    <div style="display:grid;grid-template-columns:80px 1fr;gap:10px 12px;font-size:13px;line-height:1.6;padding:6px 0 12px">
       <div style="color:#3b82f6;font-weight:800">게시자</div><div id="detEmp">-</div>
       <div style="color:#3b82f6;font-weight:800">일자</div><div id="detDate">-</div>
       <div style="color:#3b82f6;font-weight:800">시간</div><div id="detTime">-</div>
       <div style="color:#3b82f6;font-weight:800" id="detLocLabel">장소</div><div id="detLoc">-</div>
+      <div style="color:#3b82f6;font-weight:800" id="detWorkLabel">근무</div><div id="detWork">-</div>
       <div style="color:#3b82f6;font-weight:800">현장명</div><div id="detSite">-</div>
       <div style="color:#3b82f6;font-weight:800;align-self:flex-start;padding-top:2px">목적</div><div id="detPurpose" style="white-space:pre-wrap">-</div>
     </div>
@@ -954,12 +958,9 @@ function renderTable(data) {
     tbody.innerHTML = data.map(s => {
       const emp = getEmpInfo(s.employee);
       const time = s.time_start && s.time_end ? s.time_start+'~'+s.time_end : (s.time_start||'하루 종일');
-      // 프리픽스로 장소/근무 판단 (W: 근무, L: 장소, 프리픽스 없으면 workTypes 리스트로)
-      const loc = s.location||'';
-      const isWork = isWorkType(loc);
-      const displayVal = stripLocPrefix(loc);
-      const locCell = isWork ? '' : displayVal;
-      const workCell = isWork ? displayVal : '';
+      // 장소/근무 각각 추출
+      const locCell = getLocOnly(s.location||'');
+      const workCell = getWorkOnly(s.location||'');
       return `<tr>
         <td style="text-align:center"><span class="pill ${emp.pillClass}">${escHtml(s.employee)}</span></td>
         <td style="white-space:nowrap;text-align:center">${s.date||''}</td>
@@ -993,7 +994,6 @@ function renderCalendar(data) {
     // 일정 범위가 이번 달과 겹치는지
     return s.date <= monthEnd && sEnd >= monthStart;
   });
-  document.getElementById('calCount').textContent = '이번 달 '+monthData.length+'건';
   const days = ['일','월','화','수','목','금','토'];
   let html = days.map((d,i) =>
     `<div class="cal-head ${i===0?'sun':i===6?'sat':''}">${d}</div>`
@@ -1044,25 +1044,10 @@ function openModal(prefill=null) {
   document.getElementById('fDateEnd').value = prefill?(prefill.date_end||prefill.date||''):'';
   setTime('fStartHour','fStartMin', prefill?(prefill.time_start||''):'');
   setTime('fEndHour','fEndMin', prefill?(prefill.time_end||''):'');
-  // 장소/근무 - 프리픽스로 구분 (W:연차, L:현장 등)
+  // 장소/근무 - 둘 다 복원
   const savedLoc = prefill?(prefill.location||''):'';
-  if (savedLoc.startsWith('W:')) {
-    document.getElementById('fLocation').value = '';
-    document.getElementById('fWorkType').value = savedLoc.substring(2);
-  } else if (savedLoc.startsWith('L:')) {
-    document.getElementById('fLocation').value = savedLoc.substring(2);
-    document.getElementById('fWorkType').value = '';
-  } else {
-    // 기존 데이터 (프리픽스 없음) - workTypes 리스트로 판단
-    const workTypes = ['연차','출장','휴가'];
-    if (workTypes.includes(savedLoc)) {
-      document.getElementById('fLocation').value = '';
-      document.getElementById('fWorkType').value = savedLoc;
-    } else {
-      document.getElementById('fLocation').value = savedLoc;
-      document.getElementById('fWorkType').value = '';
-    }
-  }
+  document.getElementById('fLocation').value = getLocOnly(savedLoc);
+  document.getElementById('fWorkType').value = getWorkOnly(savedLoc);
   document.getElementById('fSite').value = prefill?(prefill.site_name||''):'';
   document.getElementById('fPurpose').value = prefill?(prefill.purpose||''):'';
   // 하루 종일 체크 (시간이 비어있으면 자동 체크)
@@ -1134,27 +1119,52 @@ function selectEmp(el) {
   updateModalLock();
 }
 
-// 장소/근무 배타적 선택
-function onLocChange() {
-  const loc = document.getElementById('fLocation').value;
-  if (loc) document.getElementById('fWorkType').value = '';
-}
-function onWorkChange() {
-  const work = document.getElementById('fWorkType').value;
-  if (work) document.getElementById('fLocation').value = '';
-}
+// 장소/근무 - 둘 다 선택 가능
+function onLocChange() {}
+function onWorkChange() {}
 // location 값에서 프리픽스 제거하여 순수 값만 반환
 function stripLocPrefix(v) {
   if (!v) return '';
+  // "L:현장|W:연차" 형태
+  if (v.includes('|')) {
+    const parts = v.split('|').map(p => {
+      if (p.startsWith('L:') || p.startsWith('W:')) return p.substring(2);
+      return p;
+    }).filter(p => p);
+    return parts.join(' / ');
+  }
   if (v.startsWith('L:') || v.startsWith('W:')) return v.substring(2);
   return v;
 }
-// location 값이 근무인지 판단 (프리픽스 또는 기존 데이터)
+// 장소 값만 추출
+function getLocOnly(v) {
+  if (!v) return '';
+  if (v.includes('|')) {
+    for (const p of v.split('|')) {
+      if (p.startsWith('L:')) return p.substring(2);
+    }
+    return '';
+  }
+  if (v.startsWith('L:')) return v.substring(2);
+  if (v.startsWith('W:')) return '';
+  // 기존 데이터 - workTypes 리스트에 없으면 장소
+  return ['연차','출장','휴가'].includes(v) ? '' : v;
+}
+// 근무 값만 추출
+function getWorkOnly(v) {
+  if (!v) return '';
+  if (v.includes('|')) {
+    for (const p of v.split('|')) {
+      if (p.startsWith('W:')) return p.substring(2);
+    }
+    return '';
+  }
+  if (v.startsWith('W:')) return v.substring(2);
+  if (v.startsWith('L:')) return '';
+  return ['연차','출장','휴가'].includes(v) ? v : '';
+}
 function isWorkType(v) {
-  if (!v) return false;
-  if (v.startsWith('W:')) return true;
-  if (v.startsWith('L:')) return false;
-  return ['연차','출장','휴가','기타'].includes(v);
+  return getWorkOnly(v) !== '';
 }
 
 function openModalWithDate(dateStr) {
@@ -1220,12 +1230,13 @@ async function saveSchedule() {
   }
   if(!date){showToast('시작일을 입력하세요');return;}
   const allDay=document.getElementById('fAllDay').checked;
-  // 장소 또는 근무 - 하나만 선택되어 있음 (배타적)
+  // 장소와 근무 - 둘 다 저장 가능
   const workType = document.getElementById('fWorkType').value;
   const location = document.getElementById('fLocation').value;
   let finalLoc = null;
-  if (workType) finalLoc = 'W:' + workType;
+  if (location && workType) finalLoc = 'L:' + location + '|W:' + workType;
   else if (location) finalLoc = 'L:' + location;
+  else if (workType) finalLoc = 'W:' + workType;
   const payload={
     employee:emp, date,
     date_end: dateEnd || date,
@@ -1287,8 +1298,9 @@ function showDetailPopup(id, event) {
   else if (s.time_start) timeStr = s.time_start;
   else timeStr = '하루 종일';
   document.getElementById('detTime').textContent = timeStr;
-  document.getElementById('detLocLabel').textContent = isWorkType(s.location) ? '근무' : '장소';
-  document.getElementById('detLoc').textContent = stripLocPrefix(s.location) || '-';
+  document.getElementById('detLocLabel').textContent = '장소';
+  document.getElementById('detLoc').textContent = getLocOnly(s.location) || '-';
+  document.getElementById('detWork').textContent = getWorkOnly(s.location) || '-';
   document.getElementById('detSite').textContent = s.site_name || '-';
   document.getElementById('detPurpose').textContent = s.purpose || '-';
   document.getElementById('detailModal').classList.remove('hidden');
