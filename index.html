@@ -54,9 +54,9 @@
     /* 페이지 여백 최소화 - 화면 꽉 차게 */
     .app { padding:8px; }
     .header { margin:0 0 12px 0 !important; padding:12px 14px !important; }
-    /* 일정 추가 팝업 - 화면에 맞게 축소 */
-    .modal-overlay { padding:8px; align-items:flex-start; padding-top:12px; }
-    .modal { padding:16px !important; max-height:95vh; }
+    /* 일정 추가/상세 팝업 - 화면에 맞게 축소 */
+    .modal-overlay { padding:8px; align-items:flex-start; padding-top:8px; overflow-y:auto; }
+    .modal { padding:16px !important; max-height:none; margin:0 auto; }
     .modal h2 { font-size:15px !important; margin-bottom:10px !important; padding-bottom:6px !important; }
     .modal .form-group { margin-bottom:9px !important; }
     .modal .form-group label { font-size:10px !important; margin-bottom:3px !important; }
@@ -84,14 +84,14 @@
   .chat-fab.hidden-badge .fab-badge { display:none; }
 
   /* 모바일 채팅 팝업 오버레이 */
-  .mobile-chat-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:90; align-items:stretch; justify-content:center; animation:fadeIn .2s ease-out; }
+  .mobile-chat-overlay { display:none; position:fixed; inset:0; background:#1e3a8a; z-index:90; align-items:stretch; justify-content:center; animation:fadeIn .2s ease-out; padding:0; margin:0; }
   .mobile-chat-overlay.open { display:flex; }
   @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
-  .mobile-chat-container { width:100%; max-width:none; height:100vh; background:#fff; border-radius:0; display:flex; flex-direction:column; overflow:hidden; animation:slideUp .25s ease-out; position:relative; }
+  .mobile-chat-container { width:100%; max-width:none; height:100vh; background:transparent; border-radius:0; display:flex; flex-direction:column; overflow:hidden; animation:slideUp .25s ease-out; position:relative; padding:0; margin:0; }
   @keyframes slideUp { from{transform:translateY(100%);} to{transform:translateY(0);} }
   /* 모바일 팝업 안의 채팅 패널 조정 */
   .mobile-chat-container .chat-panel { border:none; box-shadow:none; height:100%; min-height:0; margin:0; border-radius:0; }
-  .mobile-chat-container .chat-panel-header { padding-left:78px; padding-right:56px; }
+  .mobile-chat-container .chat-panel-header { padding-left:78px; padding-right:14px; }
   .mobile-chat-back { position:absolute; top:12px; left:12px; height:36px; padding:0 12px 0 8px; border-radius:20px; background:rgba(255,255,255,0.2); border:none; cursor:pointer; color:#fff; display:flex; align-items:center; gap:4px; z-index:100; font-size:13px; font-weight:700; }
   .mobile-chat-back:hover { background:rgba(255,255,255,0.35); }
   .mobile-chat-close { position:absolute; top:14px; right:14px; width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,0.2); border:none; cursor:pointer; color:#fff; display:flex; align-items:center; justify-content:center; z-index:100; }
@@ -440,7 +440,7 @@
       <div class="chat-panel">
         <div class="chat-panel-header">
           <div class="room-title-row" style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:0;padding-bottom:0;border-bottom:none;">
-            <span class="room-title">🎱 509 단톡방</span>
+            <span class="room-title">💬 509 단톡방</span>
             <div style="position:relative;">
               <button class="owner-btn" id="ownerBtn" onclick="toggleOwnerDropdown(event)">
                 <span id="ownerBtnLabel">방장선택</span>
@@ -990,17 +990,20 @@ function openModalWithDate(dateStr) {
   document.getElementById('fDateEnd').value = dateStr;
 }
 
-// 달력 날짜 클릭 → 일정 있으면 목록 팝업, 없으면 추가 팝업
+// 달력 날짜 클릭 → 일정 없으면 추가 팝업, 1개면 상세 팝업, 여러 개면 목록 팝업
 function onDateClick(dateStr) {
   const dayEvents = allSchedules.filter(s => {
     if (!s.date) return false;
-    // 시작일~종료일 범위 안에 포함되는지
     const end = s.date_end || s.date;
     return s.date <= dateStr && dateStr <= end;
   });
   if (dayEvents.length === 0) {
     openModalWithDate(dateStr);
+  } else if (dayEvents.length === 1) {
+    // 일정이 1개면 바로 상세 팝업
+    showDetailPopup(dayEvents[0].id);
   } else {
+    // 여러 개면 목록 팝업
     showDayListPopup(dateStr, dayEvents);
   }
 }
@@ -1472,14 +1475,8 @@ function applyChatLayout() {
       backBtn.className = 'mobile-chat-back';
       backBtn.onclick = closeMobileChat;
       backBtn.innerHTML = '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg><span>일정</span>';
-      // 오른쪽 상단: 닫기 X 버튼
-      const closeBtn = document.createElement('button');
-      closeBtn.className = 'mobile-chat-close';
-      closeBtn.onclick = closeMobileChat;
-      closeBtn.innerHTML = '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>';
       mobileContainer.appendChild(chatPanel);
       chatPanel.appendChild(backBtn);
-      chatPanel.appendChild(closeBtn);
       chatPanel.style.height = '100%';
       chatPanel.style.minHeight = '0';
       chatPanel.style.margin = '0';
