@@ -50,9 +50,11 @@
     .app { padding:8px; }
     .header { margin:0 0 8px 0 !important; padding:10px 12px !important; min-height:auto !important; }
     .header h1 { font-size:15px !important; }
-    /* 세부 일정 여백 축소 - 4행까지 표시 */
-    .table-wrap { max-height:190px !important; margin-bottom:8px !important; }
-    .section-header { font-size:13px !important; padding:4px 0 6px 0 !important; margin-bottom:4px !important; }
+    /* 세부 일정 여백 축소 - 정확히 4행까지 표시 */
+    .table-wrap { max-height:164px !important; margin-bottom:8px !important; }
+    .section-header { font-size:18px !important; padding:4px 0 6px 0 !important; margin-bottom:4px !important; }
+    .section-header span { font-size:18px !important; }
+    #calCount { font-size:12px !important; font-weight:600 !important; }
     /* 달력 네비게이션 컴팩트 - 월간 일정표 위 간격 축소 */
     .month-nav-inline span { font-size:12px !important; min-width:70px !important; }
     .nav-btn-mini { width:20px !important; height:20px !important; }
@@ -282,6 +284,9 @@
   .msg.theirs .msg-bubble { border-bottom-left-radius:4px; }
   .owner-bubble { background:linear-gradient(180deg,#fde047 0%,#facc15 100%); color:#1f2937; font-weight:600; }
   .other-bubble { background:#ffffff; color:#1f2937; }
+  /* 이미지가 들어간 말풍선 - 배경/패딩 최소화 */
+  .msg-bubble.has-image { padding:2px !important; background:transparent !important; box-shadow:none !important; }
+  .msg-bubble.has-image img { display:block; }
   .msg-bubble img { max-width:200px; max-height:200px; border-radius:8px; display:block; cursor:pointer; }
   .msg-time { font-size:11px; color:#d1d5db; }
   .chat-input-area { padding:12px; border-top:1px solid #1f2937; display:flex; gap:10px; align-items:center; background:#1f1f1f; border-radius:0 0 12px 12px; }
@@ -490,9 +495,12 @@
         <div class="legend-item"><div class="legend-dot dot-oh"></div> 오세훈</div>
       </div>
 
-      <div class="section-header">
-        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-        세부 일정 내용
+      <div class="section-header" style="justify-content:space-between;">
+        <span style="display:flex;align-items:center;gap:7px;">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+          세부 일정 내용
+        </span>
+        <span id="calCount" style="font-size:12px;font-weight:600;color:var(--text2);letter-spacing:0;text-transform:none;">이번 달 0건</span>
       </div>
       <div class="table-wrap">
         <table>
@@ -994,6 +1002,7 @@ function renderCalendar(data) {
     // 일정 범위가 이번 달과 겹치는지
     return s.date <= monthEnd && sEnd >= monthStart;
   });
+  const cc = document.getElementById('calCount'); if (cc) cc.textContent = '이번 달 '+monthData.length+'건';
   const days = ['일','월','화','수','목','금','토'];
   let html = days.map((d,i) =>
     `<div class="cal-head ${i===0?'sun':i===6?'sat':''}">${d}</div>`
@@ -1400,7 +1409,7 @@ function renderChatMessages(data){
       <div class="msg-row">
         ${ball}
         <div style="display:flex;flex-direction:column;gap:2px;${side==='mine'?'align-items:flex-end;':''}">
-          <div class="msg-bubble">${bubbleContent}</div>
+          <div class="msg-bubble${m.message.startsWith("data:image/")?" has-image":""}">${bubbleContent}</div>
           <div class="msg-time">${ts}</div>
         </div>
       </div>
@@ -1545,7 +1554,7 @@ function renderGroupChat(data){
       bubbleContent=escHtml(m.message);
     }
     const ball = getBilliard(m.sender);
-    const bubbleClass = isOwner ? 'msg-bubble owner-bubble' : 'msg-bubble other-bubble';
+    const imgCls = m.message.startsWith("data:image/") ? " has-image" : ""; const bubbleClass = (isOwner ? "msg-bubble owner-bubble" : "msg-bubble other-bubble") + imgCls;
     return `<div class="msg ${side}">
       ${!isOwner?'<div class="msg-sender">'+escHtml(m.sender)+'</div>':''}
       <div class="msg-row">
@@ -1595,7 +1604,7 @@ function renderAllChatMessages(data){
       <div class="msg-row">
         ${ball}
         <div style="display:flex;flex-direction:column;gap:2px;${side==='mine'?'align-items:flex-end;':''}">
-          <div class="msg-bubble">${bubbleContent}</div>
+          <div class="msg-bubble${m.message.startsWith("data:image/")?" has-image":""}">${bubbleContent}</div>
           <div class="msg-time">${ts}</div>
         </div>
       </div>
