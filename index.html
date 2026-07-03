@@ -499,9 +499,12 @@
         <div class="legend-item"><div class="legend-dot dot-oh"></div> 오세훈</div>
       </div>
 
-      <div class="section-header">
-        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-        세부 일정 내용
+      <div class="section-header" style="justify-content:space-between;">
+        <span style="display:flex;align-items:center;gap:7px;">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+          세부 일정 내용
+        </span>
+        <span id="calCount" style="font-size:12px;font-weight:600;color:var(--text2);letter-spacing:0;text-transform:none;">이번 달 0건</span>
       </div>
       <div class="table-wrap">
         <table>
@@ -541,7 +544,6 @@
           <button class="nav-btn-mini" onclick="changeMonth(1)">&#8250;</button>
         </div>
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-          <span id="calCount" style="font-size:12px;font-weight:600;color:var(--text2);">이번 달 0건</span>
           <div style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2)"><div style="width:12px;height:12px;border-radius:3px;background:var(--gjc-cal)"></div> 구자천</div>
           <div style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2)"><div style="width:12px;height:12px;border-radius:3px;background:var(--gsm-cal)"></div> 공석민</div>
           <div style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2)"><div style="width:12px;height:12px;border-radius:3px;background:var(--oh-cal)"></div> 오세훈</div>
