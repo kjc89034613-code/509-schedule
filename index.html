@@ -49,12 +49,16 @@
     /* 페이지 여백 최소화 - 화면 꽉 차게 */
     .app { padding:8px; }
     .header { margin:0 0 8px 0 !important; padding:10px 12px !important; min-height:auto !important; }
-    .header h1 { font-size:15px !important; }
+    .header h1 { font-size:17px !important; }
     /* 세부 일정 여백 축소 - 정확히 4행까지 표시 */
-    .table-wrap { max-height:164px !important; margin-bottom:8px !important; }
-    .section-header { font-size:18px !important; padding:4px 0 6px 0 !important; margin-bottom:4px !important; }
-    .section-header span { font-size:18px !important; }
-    #calCount { font-size:12px !important; font-weight:600 !important; }
+    .table-wrap { max-height:180px !important; margin-bottom:8px !important; }
+    .section-header { font-size:15px !important; padding:4px 0 6px 0 !important; margin-bottom:4px !important; }
+    /* 월간 일정표 헤더는 위에 여백 더 크게 */
+    .section-header + * + .section-header,
+    .table-wrap + .section-header,
+    .section-header:not(:first-of-type) { margin-top:16px !important; }
+    .section-header span { font-size:15px !important; }
+    #calCount { font-size:11px !important; font-weight:600 !important; }
     /* 달력 네비게이션 컴팩트 - 월간 일정표 위 간격 축소 */
     .month-nav-inline span { font-size:12px !important; min-width:70px !important; }
     .nav-btn-mini { width:20px !important; height:20px !important; }
@@ -495,12 +499,9 @@
         <div class="legend-item"><div class="legend-dot dot-oh"></div> 오세훈</div>
       </div>
 
-      <div class="section-header" style="justify-content:space-between;">
-        <span style="display:flex;align-items:center;gap:7px;">
-          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-          세부 일정 내용
-        </span>
-        <span id="calCount" style="font-size:12px;font-weight:600;color:var(--text2);letter-spacing:0;text-transform:none;">이번 달 0건</span>
+      <div class="section-header">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        세부 일정 내용
       </div>
       <div class="table-wrap">
         <table>
@@ -529,19 +530,18 @@
         </button>
       </div>
 
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;border-bottom:2px solid var(--border);padding-bottom:8px;flex-wrap:wrap;gap:8px;">
-        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-          <div class="section-header" style="border:none;margin:0;padding:0;">
-            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-            월간 일정표
-          </div>
-          <div class="month-nav-inline">
-            <button class="nav-btn-mini" onclick="changeMonth(-1)">&#8249;</button>
-            <span id="monthLabel"></span>
-            <button class="nav-btn-mini" onclick="changeMonth(1)">&#8250;</button>
-          </div>
+      <div class="section-header" style="margin-top:12px;">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        월간 일정표
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:8px;">
+        <div class="month-nav-inline">
+          <button class="nav-btn-mini" onclick="changeMonth(-1)">&#8249;</button>
+          <span id="monthLabel"></span>
+          <button class="nav-btn-mini" onclick="changeMonth(1)">&#8250;</button>
         </div>
-        <div style="display:flex;gap:12px;align-items:center;">
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <span id="calCount" style="font-size:12px;font-weight:600;color:var(--text2);">이번 달 0건</span>
           <div style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2)"><div style="width:12px;height:12px;border-radius:3px;background:var(--gjc-cal)"></div> 구자천</div>
           <div style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2)"><div style="width:12px;height:12px;border-radius:3px;background:var(--gsm-cal)"></div> 공석민</div>
           <div style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2)"><div style="width:12px;height:12px;border-radius:3px;background:var(--oh-cal)"></div> 오세훈</div>
