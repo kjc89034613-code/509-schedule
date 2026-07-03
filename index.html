@@ -33,7 +33,7 @@
     .table-wrap { max-height:280px; overflow-x:hidden; }
     table { min-width:0 !important; table-layout:fixed; width:100% !important; }
     /* 모바일에서만 특정 헤더 표시/숨김 */
-    .col-loc, .col-manage { display:none !important; }
+    .col-loc, .col-work, .col-manage { display:none !important; }
     /* 모바일 컬럼 너비 지정 - 5개 컬럼 화면 꽉 채움 */
     .col-emp { width:16% !important; }
     .col-date { width:16% !important; }
@@ -50,35 +50,45 @@
     .app { padding:8px; }
     .header { margin:0 0 8px 0 !important; padding:10px 12px !important; min-height:auto !important; }
     .header h1 { font-size:15px !important; }
-    /* 세부 일정 여백 축소 */
-    .table-wrap { max-height:200px; margin-bottom:10px !important; }
-    .section-header { font-size:13px !important; padding:4px 0 6px 0 !important; margin-bottom:6px !important; }
-    /* 달력 네비게이션 컴팩트 */
-    .month-nav { margin-bottom:6px !important; }
+    /* 세부 일정 여백 축소 - 4행까지 표시 */
+    .table-wrap { max-height:190px !important; margin-bottom:8px !important; }
+    .section-header { font-size:13px !important; padding:4px 0 6px 0 !important; margin-bottom:4px !important; }
+    /* 달력 네비게이션 컴팩트 - 월간 일정표 위 간격 축소 */
+    .month-nav { margin-bottom:4px !important; }
     .month-nav span { font-size:13px !important; }
     .nav-btn { width:26px !important; height:26px !important; }
+    /* 월간 일정표 헤더와 legend 위쪽 여백 축소 */
+    .left-col > div[style*="margin-bottom:10px"] { margin-bottom:4px !important; }
     /* 달력 셀 크기 - 화면 폭에 맞춰 자동 축소 */
     .cal-cell { height:48px !important; min-height:48px !important; padding:2px !important; overflow:hidden; box-sizing:border-box; }
-    .cal-grid { margin-bottom:10px !important; }
+    .cal-grid { margin-bottom:10px !important; margin-top:0 !important; }
     .cal-head { padding:6px 4px !important; font-size:11px !important; }
     .cal-num { font-size:11px !important; }
     .cal-event { font-size:8px !important; padding:1px 2px !important; margin-bottom:1px !important; border-radius:2px !important; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; line-height:11px !important; }
     /* 일정 추가/상세 팝업 - 화면에 맞게 축소 */
     .modal-overlay { padding:8px; align-items:flex-start; padding-top:8px; overflow-y:auto; }
-    .modal { padding:16px !important; max-height:none; margin:0 auto; }
-    .modal h2 { font-size:15px !important; margin-bottom:10px !important; padding-bottom:6px !important; }
-    .modal .form-group { margin-bottom:9px !important; }
-    .modal .form-group label { font-size:10px !important; margin-bottom:3px !important; }
-    .modal .form-group input, .modal .form-group select, .modal .form-group textarea { padding:6px 8px !important; font-size:12px !important; }
-    .modal .form-group textarea { min-height:50px !important; }
-    .modal .sub-label { font-size:9px !important; margin-bottom:2px !important; }
-    .modal .checkbox-row { padding:5px 10px !important; font-size:11px !important; }
-    .modal .checkbox-row input[type="checkbox"] { width:13px !important; height:13px !important; }
-    .modal .form-row { gap:8px !important; }
-    .modal .time-split .time-part { padding:6px 4px !important; font-size:12px !important; }
-    .modal .emp-chip { padding:4px 12px !important; font-size:11px !important; }
-    .modal-actions { margin-top:12px !important; padding-top:10px !important; }
-    .modal .btn { padding:6px 12px !important; font-size:12px !important; }
+    .modal { padding:20px !important; max-height:none; margin:0 auto; border-radius:16px !important; }
+    .modal h2 { font-size:17px !important; margin-bottom:16px !important; padding-bottom:10px !important; }
+    /* grid-form 모바일 */
+    .grid-form { grid-template-columns:56px 1fr !important; gap:10px 4px !important; margin-bottom:12px !important; }
+    .gf-label { font-size:13px !important; padding:6px 0 !important; line-height:1.3 !important; }
+    .gf-label::before { width:3px !important; height:14px !important; }
+    .gf-input > input, .gf-input > select, .gf-input > textarea { padding:8px 10px !important; font-size:13px !important; border-radius:8px !important; }
+    .gf-input textarea { min-height:60px !important; }
+    /* F: T: 모바일 - 간격 최소 */
+    .gf-ft-label { font-size:12px !important; padding:0 1px !important; }
+    .gf-ft-row { gap:3px !important; }
+    .gf-ft-row input[type="date"] { padding:7px 4px !important; font-size:11px !important; border-radius:8px !important; }
+    .gf-time-parts { gap:2px !important; }
+    .gf-time-parts .time-part { padding:7px 1px !important; font-size:11px !important; border-radius:8px !important; }
+    .gf-time-parts .time-colon { font-size:12px !important; }
+    /* 종일 모바일 */
+    .gf-allday { padding:5px 6px !important; font-size:11px !important; gap:3px !important; }
+    .gf-allday input[type="checkbox"] { width:12px !important; height:12px !important; }
+    /* 담당자 chip */
+    .emp-chip { padding:5px 12px !important; font-size:11px !important; }
+    .modal-actions { margin-top:16px !important; padding-top:12px !important; }
+    .modal .btn { padding:8px 16px !important; font-size:13px !important; }
   }
   /* 웹에서는 벌크바 숨김 */
   @media(min-width:861px){
@@ -310,6 +320,11 @@
   .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
   /* 시간 시/분 분리 */
   .time-split { display:flex; align-items:center; gap:6px; }
+  /* 시간 - 라벨 + 시 + : + 분 한 줄 배치 */
+  .time-line { display:flex; align-items:center; gap:8px; }
+  .time-line-label { flex-shrink:0; font-size:12px; font-weight:800; color:#3b82f6; letter-spacing:.02em; text-transform:uppercase; min-width:74px; }
+  .time-line .time-part { flex:1; padding:8px 6px; border:1px solid #d1d9e6; border-radius:8px; background:#fafcff; font-size:13px; font-weight:600; text-align:center; color:var(--text); outline:none; cursor:pointer; box-shadow:var(--shadow-inset); transition:all .15s; }
+  .time-line .time-part:focus { border-color:var(--accent); background:#fff; box-shadow:var(--shadow-inset), 0 0 0 3px rgba(59,130,246,0.15); }
   .time-split .time-part { flex:1; padding:9px 8px; border:1px solid #d1d9e6; border-radius:8px; background:#fafcff; font-size:14px; font-weight:600; text-align:center; color:var(--text); outline:none; cursor:pointer; box-shadow:var(--shadow-inset); transition:all .15s; }
   .time-split .time-part:focus { border-color:var(--accent); background:#fff; box-shadow:var(--shadow-inset), 0 0 0 3px rgba(59,130,246,0.15); }
   .time-split .time-colon { font-size:16px; font-weight:800; color:var(--text2); }
@@ -328,6 +343,85 @@
   .emp-chip.active-gjc{ background:linear-gradient(180deg,#22c55e 0%,#15803d 100%); color:#fff; border-color:#15803d; text-shadow:0 1px 1px rgba(0,0,0,0.15); }
   .emp-chip.active-gsm{ background:linear-gradient(180deg,#ef4444 0%,#b91c1c 100%); color:#fff; border-color:#b91c1c; text-shadow:0 1px 1px rgba(0,0,0,0.15); }
   .form-row.hidden { display:none; }
+
+  /* 그리드 폼 - 세련된 라벨/입력 배치 */
+  .grid-form { display:grid; grid-template-columns:80px 1fr; gap:12px 6px; align-items:center; margin-bottom:16px; }
+  .gf-label {
+    font-size:15px; font-weight:800; color:#1e293b;
+    letter-spacing:.01em; padding:8px 0; align-self:center;
+    line-height:1.35; text-align:left;
+    display:flex; align-items:center; gap:4px;
+  }
+  .gf-label::before {
+    content:''; display:inline-block; width:3px; height:16px;
+    background:linear-gradient(180deg,#3b82f6,#1e40af);
+    border-radius:2px; margin-right:4px;
+  }
+  .gf-input { padding:0; align-self:center; }
+  .gf-input > input, .gf-input > select, .gf-input > textarea {
+    width:100%; padding:10px 12px;
+    border:1px solid #e2e8f0; border-radius:10px;
+    background:#f8fafc; color:var(--text);
+    font-size:14px; font-weight:500; outline:none; font-family:inherit;
+    transition:all .2s ease;
+  }
+  .gf-input > input:focus, .gf-input > select:focus, .gf-input > textarea:focus {
+    border-color:var(--accent); background:#fff;
+    box-shadow:0 0 0 4px rgba(59,130,246,0.12);
+  }
+  .gf-input textarea { resize:vertical; min-height:80px; line-height:1.6; }
+
+  /* From / To 배치 (날짜, 시간) - 간격 최소화 */
+  .gf-ft-row { display:flex; align-items:center; gap:4px; flex-wrap:nowrap; }
+  .gf-ft-label { font-size:15px; font-weight:900; color:#1e40af; letter-spacing:0.02em; padding:0 2px; flex-shrink:0; }
+  .gf-ft-row input[type="date"] {
+    flex:1; min-width:0; padding:9px 6px;
+    border:1px solid #e2e8f0; border-radius:10px;
+    background:#f8fafc; font-size:13px; font-weight:600;
+    outline:none; transition:all .2s ease;
+  }
+  .gf-ft-row input[type="date"]:focus {
+    border-color:var(--accent); background:#fff;
+    box-shadow:0 0 0 4px rgba(59,130,246,0.12);
+  }
+  /* 시간 파트 (시:분) */
+  .gf-time-parts { display:flex; align-items:center; gap:3px; flex:1; min-width:0; }
+  .gf-time-parts .time-part {
+    flex:1; min-width:0; padding:9px 2px;
+    border:1px solid #e2e8f0; border-radius:10px;
+    background:#f8fafc; font-size:13px; font-weight:700;
+    text-align:center; outline:none; cursor:pointer;
+    transition:all .2s ease;
+  }
+  .gf-time-parts .time-part:focus {
+    border-color:var(--accent); background:#fff;
+    box-shadow:0 0 0 4px rgba(59,130,246,0.12);
+  }
+  .gf-time-parts .time-colon { font-size:14px; font-weight:800; color:#94a3b8; }
+  /* 종일 체크박스 - 컴팩트하게 (시간줄에 같이) */
+  .gf-allday {
+    display:inline-flex; align-items:center; gap:4px;
+    padding:6px 8px;
+    background:linear-gradient(180deg,#eff6ff 0%,#dbeafe 100%);
+    border:1px solid #93c5fd; border-radius:8px;
+    font-size:12px; font-weight:700; color:#1e40af;
+    cursor:pointer; user-select:none; white-space:nowrap;
+    box-shadow:0 1px 2px rgba(59,130,246,0.15), inset 0 1px 0 rgba(255,255,255,0.7);
+    transition:all .15s;
+    flex-shrink:0;
+  }
+  .gf-allday:hover {
+    background:linear-gradient(180deg,#dbeafe 0%,#bfdbfe 100%);
+    transform:translateY(-1px);
+  }
+  .gf-allday input[type="checkbox"] { width:13px; height:13px; cursor:pointer; accent-color:var(--accent); margin:0; }
+
+  /* 모달 세련된 디자인 */
+  .modal { border-radius:20px !important; padding:28px !important; }
+  .modal h2 { font-size:19px !important; font-weight:800 !important; margin-bottom:20px !important; padding-bottom:12px !important; border-bottom:2px solid #e0e7ff !important; }
+  /* 담당자 chip - 조금 작게, 담당자 라벨과 붙이기 */
+  .emp-chips { display:flex; gap:6px; flex-wrap:wrap; }
+  .emp-chip { padding:6px 14px !important; font-size:12px !important; border-radius:20px !important; }
   /* 이미지 전체보기 오버레이 */
   .img-overlay { position:fixed; inset:0; background:rgba(0,0,0,.85); display:flex; align-items:center; justify-content:center; z-index:300; cursor:zoom-out; }
   .img-overlay.hidden { display:none; }
@@ -404,13 +498,14 @@
               <th style="text-align:center" class="col-date">일자</th>
               <th style="text-align:center" class="col-time">시간</th>
               <th style="text-align:center" class="col-loc">장소</th>
+              <th style="text-align:center" class="col-work">근무</th>
               <th style="text-align:center" class="col-site">현장명</th>
               <th style="text-align:center;width:220px" class="col-purpose">목적</th>
               <th style="text-align:center" class="col-manage">관리</th>
             </tr>
           </thead>
           <tbody id="scheduleBody">
-            <tr class="empty-row"><td colspan="7"><span class="spinner"></span> 불러오는 중...</td></tr>
+            <tr class="empty-row"><td colspan="8"><span class="spinner"></span> 불러오는 중...</td></tr>
           </tbody>
         </table>
       </div>
@@ -544,7 +639,7 @@
       <div style="color:#3b82f6;font-weight:800">게시자</div><div id="detEmp">-</div>
       <div style="color:#3b82f6;font-weight:800">일자</div><div id="detDate">-</div>
       <div style="color:#3b82f6;font-weight:800">시간</div><div id="detTime">-</div>
-      <div style="color:#3b82f6;font-weight:800">장소</div><div id="detLoc">-</div>
+      <div style="color:#3b82f6;font-weight:800" id="detLocLabel">장소</div><div id="detLoc">-</div>
       <div style="color:#3b82f6;font-weight:800">현장명</div><div id="detSite">-</div>
       <div style="color:#3b82f6;font-weight:800;align-self:flex-start;padding-top:2px">목적</div><div id="detPurpose" style="white-space:pre-wrap">-</div>
     </div>
@@ -570,76 +665,88 @@
     <h2 id="modalTitle">일정 추가</h2>
     <input type="hidden" id="editId">
 
-    <div class="form-group">
-      <label>담당자 <span style="color:#dc2626">*</span></label>
-      <div class="emp-chips" id="empChips">
-        <div class="emp-chip" data-name="구자천" onclick="selectEmp(this)">구자천</div>
-        <div class="emp-chip" data-name="공석민" onclick="selectEmp(this)">공석민</div>
-        <div class="emp-chip" data-name="오세훈" onclick="selectEmp(this)">오세훈</div>
+    <div class="grid-form">
+      <!-- 담당자 -->
+      <div class="gf-label">담당자 <span style="color:#dc2626">*</span></div>
+      <div class="gf-input">
+        <div class="emp-chips" id="empChips">
+          <div class="emp-chip" data-name="구자천" onclick="selectEmp(this)">구자천</div>
+          <div class="emp-chip" data-name="공석민" onclick="selectEmp(this)">공석민</div>
+          <div class="emp-chip" data-name="오세훈" onclick="selectEmp(this)">오세훈</div>
+        </div>
+        <input type="hidden" id="fEmployee">
+        <div id="empWarn" style="display:none;color:#dc2626;font-size:12px;margin-top:6px;font-weight:600;">⚠ 담당자를 먼저 선택해주세요</div>
       </div>
-      <input type="hidden" id="fEmployee">
-      <div id="empWarn" style="display:none;color:#dc2626;font-size:11px;margin-top:5px;font-weight:600;">⚠ 담당자를 먼저 선택해주세요</div>
-    </div>
 
-    <!-- 일자 3분할 -->
-    <div class="form-group" id="dateSection">
-      <label>일자</label>
-      <div class="form-row" style="margin-bottom:7px;">
-        <div><div class="sub-label">시작일</div><input type="date" id="fDate" onchange="onDateStartChange()"></div>
-        <div><div class="sub-label">종료일</div><input type="date" id="fDateEnd"></div>
-      </div>
-      <label class="checkbox-row">
-        <input type="checkbox" id="fAllDay" onchange="toggleAllDay()">
-        <span>하루 종일</span>
-      </label>
-    </div>
-
-    <!-- 시간 -->
-    <div class="form-row" id="timeRow">
-      <div class="form-group">
-        <label>시작 시간</label>
-        <div class="time-split">
-          <select id="fStartHour" class="time-part"></select>
-          <span class="time-colon">:</span>
-          <select id="fStartMin" class="time-part"></select>
+      <!-- 날짜 -->
+      <div class="gf-label">날짜</div>
+      <div class="gf-input" id="dateSection">
+        <div class="gf-ft-row">
+          <span class="gf-ft-label">F :</span>
+          <input type="date" id="fDate" onchange="onDateStartChange()">
+          <span class="gf-ft-label">T :</span>
+          <input type="date" id="fDateEnd">
         </div>
       </div>
-      <div class="form-group">
-        <label>종료 시간</label>
-        <div class="time-split">
-          <select id="fEndHour" class="time-part"></select>
-          <span class="time-colon">:</span>
-          <select id="fEndMin" class="time-part"></select>
+
+      <!-- 시간 -->
+      <div class="gf-label">시간</div>
+      <div class="gf-input" id="timeRow">
+        <div class="gf-ft-row">
+          <span class="gf-ft-label">F :</span>
+          <div class="gf-time-parts">
+            <select id="fStartHour" class="time-part"></select>
+            <span class="time-colon">:</span>
+            <select id="fStartMin" class="time-part"></select>
+          </div>
+          <span class="gf-ft-label">T :</span>
+          <div class="gf-time-parts">
+            <select id="fEndHour" class="time-part"></select>
+            <span class="time-colon">:</span>
+            <select id="fEndMin" class="time-part"></select>
+          </div>
+          <label class="gf-allday">
+            <input type="checkbox" id="fAllDay" onchange="toggleAllDay()">
+            <span>종일</span>
+          </label>
         </div>
       </div>
-    </div>
 
-    <!-- 장소 + 현장명 한 줄 -->
-    <div class="form-group" id="locSection">
-      <div class="form-row-loc">
-        <div>
-          <label>장소</label>
-          <select id="fLocation">
-            <option value="">선택</option>
-            <option value="현장">현장</option>
-            <option value="본사">본사</option>
-            <option value="외근">외근</option>
-            <option value="연차">연차</option>
-            <option value="휴가">휴가</option>
-            <option value="출장">출장</option>
-          </select>
-        </div>
-        <div>
-          <label>현장명</label>
-          <input type="text" id="fSite" placeholder="예: 아크로 리버스카이(조합)">
-        </div>
+      <!-- 장소 -->
+      <div class="gf-label">장소</div>
+      <div class="gf-input" id="locSection">
+        <select id="fLocation" style="max-width:180px;" onchange="onLocChange()">
+          <option value="">선택</option>
+          <option value="현장">현장</option>
+          <option value="본사">본사</option>
+          <option value="전시관">전시관</option>
+          <option value="기타">기타</option>
+        </select>
       </div>
-    </div>
 
-    <!-- 목적 (textarea) -->
-    <div class="form-group" id="purposeSection">
-      <label>목적</label>
-      <textarea id="fPurpose" rows="3" placeholder="예: 신규 TM 장비 설치 및 교육"></textarea>
+      <!-- 근무 -->
+      <div class="gf-label">근무</div>
+      <div class="gf-input">
+        <select id="fWorkType" style="max-width:180px;" onchange="onWorkChange()">
+          <option value="">선택</option>
+          <option value="연차">연차</option>
+          <option value="출장">출장</option>
+          <option value="휴가">휴가</option>
+          <option value="기타">기타</option>
+        </select>
+      </div>
+
+      <!-- 현장명 -->
+      <div class="gf-label">현장명</div>
+      <div class="gf-input">
+        <input type="text" id="fSite" placeholder="예: 아크로 리버스카이(조합)">
+      </div>
+
+      <!-- 목적 -->
+      <div class="gf-label" style="align-self:start;padding-top:12px !important;">목적</div>
+      <div class="gf-input" id="purposeSection">
+        <textarea id="fPurpose" rows="4" placeholder="예: 신규 TM 장비 설치 및 교육"></textarea>
+      </div>
     </div>
 
     <div class="modal-actions">
@@ -813,7 +920,7 @@ function renderTable(data) {
   const tbody = document.getElementById('scheduleBody');
   const mobile = window.innerWidth <= 860;
   if (!data.length) {
-    tbody.innerHTML = `<tr class="empty-row"><td colspan="${mobile?5:7}">등록된 일정이 없습니다</td></tr>`;
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="${mobile?5:8}">등록된 일정이 없습니다</td></tr>`;
     return;
   }
   if (mobile) {
@@ -831,7 +938,7 @@ function renderTable(data) {
       } else if (s.time_start) {
         timeStr = s.time_start.split(':')[0] + '시';
       } else {
-        timeStr = '종일';
+        timeStr = '하루 종일';
       }
       return `<tr class="clickable-row" onclick="showDetailPopup('${s.id}', event)">
         <td style="text-align:center"><span class="pill ${emp.pillClass}">${escHtml(s.employee)}</span></td>
@@ -843,15 +950,22 @@ function renderTable(data) {
     }).join('');
     updateBulkBar();
   } else {
-    // 웹: 기존 구조 그대로 (7개 컬럼)
+    // 웹: 기존 구조 그대로 (8개 컬럼 - 장소/근무 분리)
     tbody.innerHTML = data.map(s => {
       const emp = getEmpInfo(s.employee);
-      const time = s.time_start && s.time_end ? s.time_start+'~'+s.time_end : (s.time_start||'');
+      const time = s.time_start && s.time_end ? s.time_start+'~'+s.time_end : (s.time_start||'하루 종일');
+      // 프리픽스로 장소/근무 판단 (W: 근무, L: 장소, 프리픽스 없으면 workTypes 리스트로)
+      const loc = s.location||'';
+      const isWork = isWorkType(loc);
+      const displayVal = stripLocPrefix(loc);
+      const locCell = isWork ? '' : displayVal;
+      const workCell = isWork ? displayVal : '';
       return `<tr>
         <td style="text-align:center"><span class="pill ${emp.pillClass}">${escHtml(s.employee)}</span></td>
         <td style="white-space:nowrap;text-align:center">${s.date||''}</td>
         <td style="white-space:nowrap;text-align:center">${time}</td>
-        <td style="text-align:center"><span class="loc-badge">${escHtml(s.location||'')}</span></td>
+        <td style="text-align:center">${locCell?`<span class="loc-badge">${escHtml(locCell)}</span>`:''}</td>
+        <td style="text-align:center">${workCell?`<span class="loc-badge" style="background:linear-gradient(180deg,#fef3c7 0%,#fde68a 100%);color:#78350f">${escHtml(workCell)}</span>`:''}</td>
         <td style="text-align:center">${escHtml(s.site_name||'')}</td>
         <td>${escHtml(s.purpose||'')}</td>
         <td style="text-align:center;white-space:nowrap">
@@ -869,10 +983,15 @@ function renderTable(data) {
 
 function renderCalendar(data) {
   document.getElementById('monthLabel').textContent = currentYear+'년 '+(currentMonth+1)+'월';
+  // 이번 달과 겹치는 일정 필터 (시작일~종료일 범위 고려)
+  const monthStart = currentYear+'-'+String(currentMonth+1).padStart(2,'0')+'-01';
+  const lastDay = new Date(currentYear,currentMonth+1,0).getDate();
+  const monthEnd = currentYear+'-'+String(currentMonth+1).padStart(2,'0')+'-'+String(lastDay).padStart(2,'0');
   const monthData = data.filter(s => {
     if (!s.date) return false;
-    const p = s.date.split('-').map(Number);
-    return p[0]===currentYear && p[1]===currentMonth+1;
+    const sEnd = s.date_end || s.date;
+    // 일정 범위가 이번 달과 겹치는지
+    return s.date <= monthEnd && sEnd >= monthStart;
   });
   document.getElementById('calCount').textContent = '이번 달 '+monthData.length+'건';
   const days = ['일','월','화','수','목','금','토'];
@@ -890,7 +1009,11 @@ function renderCalendar(data) {
     const isToday=today.getFullYear()===currentYear&&today.getMonth()===currentMonth&&today.getDate()===d;
     const dow=new Date(currentYear,currentMonth,d).getDay();
     const dateStr=currentYear+'-'+String(currentMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
-    const evts=monthData.filter(s=>s.date===dateStr);
+    // 시작일~종료일 범위 안에 이 날짜가 있는 모든 일정
+    const evts=monthData.filter(s=>{
+      const sEnd = s.date_end || s.date;
+      return s.date <= dateStr && dateStr <= sEnd;
+    });
     const numCls='cal-num'+(isToday?' today':dow===0?' sun-color':dow===6?' sat-color':'');
     let evtsHtml=evts.slice(0,3).map(s=>{
       const cl=getEmpInfo(s.employee).calClass;
@@ -921,7 +1044,25 @@ function openModal(prefill=null) {
   document.getElementById('fDateEnd').value = prefill?(prefill.date_end||prefill.date||''):'';
   setTime('fStartHour','fStartMin', prefill?(prefill.time_start||''):'');
   setTime('fEndHour','fEndMin', prefill?(prefill.time_end||''):'');
-  document.getElementById('fLocation').value = prefill?(prefill.location||''):'';
+  // 장소/근무 - 프리픽스로 구분 (W:연차, L:현장 등)
+  const savedLoc = prefill?(prefill.location||''):'';
+  if (savedLoc.startsWith('W:')) {
+    document.getElementById('fLocation').value = '';
+    document.getElementById('fWorkType').value = savedLoc.substring(2);
+  } else if (savedLoc.startsWith('L:')) {
+    document.getElementById('fLocation').value = savedLoc.substring(2);
+    document.getElementById('fWorkType').value = '';
+  } else {
+    // 기존 데이터 (프리픽스 없음) - workTypes 리스트로 판단
+    const workTypes = ['연차','출장','휴가'];
+    if (workTypes.includes(savedLoc)) {
+      document.getElementById('fLocation').value = '';
+      document.getElementById('fWorkType').value = savedLoc;
+    } else {
+      document.getElementById('fLocation').value = savedLoc;
+      document.getElementById('fWorkType').value = '';
+    }
+  }
   document.getElementById('fSite').value = prefill?(prefill.site_name||''):'';
   document.getElementById('fPurpose').value = prefill?(prefill.purpose||''):'';
   // 하루 종일 체크 (시간이 비어있으면 자동 체크)
@@ -993,6 +1134,29 @@ function selectEmp(el) {
   updateModalLock();
 }
 
+// 장소/근무 배타적 선택
+function onLocChange() {
+  const loc = document.getElementById('fLocation').value;
+  if (loc) document.getElementById('fWorkType').value = '';
+}
+function onWorkChange() {
+  const work = document.getElementById('fWorkType').value;
+  if (work) document.getElementById('fLocation').value = '';
+}
+// location 값에서 프리픽스 제거하여 순수 값만 반환
+function stripLocPrefix(v) {
+  if (!v) return '';
+  if (v.startsWith('L:') || v.startsWith('W:')) return v.substring(2);
+  return v;
+}
+// location 값이 근무인지 판단 (프리픽스 또는 기존 데이터)
+function isWorkType(v) {
+  if (!v) return false;
+  if (v.startsWith('W:')) return true;
+  if (v.startsWith('L:')) return false;
+  return ['연차','출장','휴가','기타'].includes(v);
+}
+
 function openModalWithDate(dateStr) {
   openModal(null);
   document.getElementById('fDate').value = dateStr;
@@ -1030,7 +1194,7 @@ function showDayListPopup(dateStr, events) {
       <span class="pill ${emp.pillClass}">${escHtml(s.employee)}</span>
       <div style="flex:1;min-width:0;">
         <div style="font-size:13px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(s.site_name || s.purpose || '(내용 없음)')}</div>
-        <div style="font-size:11px;color:var(--text2);margin-top:2px;">🕐 ${timeStr}${s.location?' · '+escHtml(s.location):''}</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:2px;">🕐 ${timeStr}${s.location?' · '+escHtml(stripLocPrefix(s.location)):''}</div>
       </div>
       <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color:var(--text2);flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
     </div>`;
@@ -1056,12 +1220,18 @@ async function saveSchedule() {
   }
   if(!date){showToast('시작일을 입력하세요');return;}
   const allDay=document.getElementById('fAllDay').checked;
+  // 장소 또는 근무 - 하나만 선택되어 있음 (배타적)
+  const workType = document.getElementById('fWorkType').value;
+  const location = document.getElementById('fLocation').value;
+  let finalLoc = null;
+  if (workType) finalLoc = 'W:' + workType;
+  else if (location) finalLoc = 'L:' + location;
   const payload={
     employee:emp, date,
     date_end: dateEnd || date,
     time_start: allDay ? null : (getTime('fStartHour','fStartMin')||null),
     time_end: allDay ? null : (getTime('fEndHour','fEndMin')||null),
-    location:document.getElementById('fLocation').value||null,
+    location:finalLoc,
     site_name:document.getElementById('fSite').value||null,
     purpose:document.getElementById('fPurpose').value||null,
   };
@@ -1077,6 +1247,8 @@ async function saveSchedule() {
         delete payload.date_end;
         if(id) await apiReq('/schedules?id=eq.'+id,'PATCH',payload);
         else   await apiReq('/schedules','POST',payload);
+        showToast('Supabase 테이블에 date_end 컬럼 추가 필요 (안내 확인)');
+        return;
       } else {
         throw e;
       }
@@ -1115,7 +1287,8 @@ function showDetailPopup(id, event) {
   else if (s.time_start) timeStr = s.time_start;
   else timeStr = '하루 종일';
   document.getElementById('detTime').textContent = timeStr;
-  document.getElementById('detLoc').textContent = s.location || '-';
+  document.getElementById('detLocLabel').textContent = isWorkType(s.location) ? '근무' : '장소';
+  document.getElementById('detLoc').textContent = stripLocPrefix(s.location) || '-';
   document.getElementById('detSite').textContent = s.site_name || '-';
   document.getElementById('detPurpose').textContent = s.purpose || '-';
   document.getElementById('detailModal').classList.remove('hidden');
@@ -1430,7 +1603,7 @@ function startChatPoll(){
 function exportCSV(){
   if(!allSchedules.length){showToast('다운로드할 데이터가 없습니다');return;}
   const rows=[['구분','일자','시작시간','종료시간','장소','현장명','목적']];
-  allSchedules.forEach(s=>rows.push([s.employee,s.date,s.time_start||'',s.time_end||'',s.location||'',s.site_name||'',s.purpose||'']));
+  allSchedules.forEach(s=>rows.push([s.employee,s.date,s.time_start||'',s.time_end||'',stripLocPrefix(s.location)||'',s.site_name||'',s.purpose||'']));
   const csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
   const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
   const a=document.createElement('a');
