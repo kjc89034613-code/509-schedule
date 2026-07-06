@@ -180,7 +180,7 @@
     text-shadow:0 1px 0 rgba(255,255,255,0.5);
   }
   thead th:last-child { border-right:none; }
-  tbody td { padding:8px 10px; border-bottom:1px solid #e8eef6; border-right:1px solid #edf2fa; vertical-align:middle; font-size:12px; }
+  tbody td { padding:8px 10px; border-bottom:1px solid #e8eef6; border-right:1px solid #edf2fa; vertical-align:middle; font-size:12px; height:44px; box-sizing:border-box; }
   tbody td:last-child { border-right:none; }
   tbody tr:nth-child(even) { background:#fafcff; }
   tbody tr:nth-child(odd) { background:#ffffff; }
@@ -533,8 +533,8 @@
               <th style="text-align:center" class="col-emp">구분</th>
               <th style="text-align:center" class="col-date">일자</th>
               <th style="text-align:center" class="col-time">시간</th>
-              <th style="text-align:center" class="col-loc">장소</th>
-              <th style="text-align:center" class="col-work">근무</th>
+              <th style="text-align:center;white-space:nowrap;min-width:60px" class="col-loc">장소</th>
+              <th style="text-align:center;white-space:nowrap;min-width:60px" class="col-work">근무</th>
               <th style="text-align:center" class="col-site">현장명</th>
               <th style="text-align:center;width:220px" class="col-purpose">목적</th>
               <th style="text-align:center" class="col-manage">관리</th>
@@ -753,7 +753,7 @@
           <option value="">선택</option>
           <option value="현장">현장</option>
           <option value="본사">본사</option>
-          <option value="전시관">전시관</option>
+          <option value="MH">MH</option>
           <option value="기타">기타</option>
         </select>
       </div>
@@ -763,6 +763,7 @@
       <div class="gf-input">
         <select id="fWorkType" style="max-width:180px;" onchange="onWorkChange()">
           <option value="">선택</option>
+          <option value="외근">외근</option>
           <option value="연차">연차</option>
           <option value="출장">출장</option>
           <option value="휴가">휴가</option>
@@ -995,10 +996,10 @@ function renderTable(data) {
         <td style="text-align:center"><span class="pill ${emp.pillClass}">${escHtml(s.employee)}</span></td>
         <td style="white-space:nowrap;text-align:center">${s.date||''}</td>
         <td style="white-space:nowrap;text-align:center">${time}</td>
-        <td style="text-align:center">${locCell?`<span class="loc-badge">${escHtml(locCell)}</span>`:''}</td>
-        <td style="text-align:center">${workCell?`<span class="loc-badge" style="background:linear-gradient(180deg,#fef3c7 0%,#fde68a 100%);color:#78350f">${escHtml(workCell)}</span>`:''}</td>
-        <td style="text-align:center">${escHtml(s.site_name||'')}</td>
-        <td>${escHtml(s.purpose||'')}</td>
+        <td style="text-align:center;white-space:nowrap">${escHtml(locCell)}</td>
+        <td style="text-align:center;white-space:nowrap">${escHtml(workCell)}</td>
+        <td style="text-align:center;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escHtml(s.site_name||'')}">${escHtml(s.site_name||'')}</td>
+        <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escHtml(s.purpose||'')}">${escHtml(s.purpose||'')}</td>
         <td style="text-align:center;white-space:nowrap">
           <button class="action-btn" onclick="editSchedule('${s.id}')" title="수정" style="padding:4px 6px;margin:0 1px">
             <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -1179,7 +1180,7 @@ function getLocOnly(v) {
   if (v.startsWith('L:')) return v.substring(2);
   if (v.startsWith('W:')) return '';
   // 기존 데이터 - workTypes 리스트에 없으면 장소
-  return ['연차','출장','휴가'].includes(v) ? '' : v;
+  return ['외근','연차','출장','휴가'].includes(v) ? '' : v;
 }
 // 근무 값만 추출
 function getWorkOnly(v) {
@@ -1192,7 +1193,7 @@ function getWorkOnly(v) {
   }
   if (v.startsWith('W:')) return v.substring(2);
   if (v.startsWith('L:')) return '';
-  return ['연차','출장','휴가'].includes(v) ? v : '';
+  return ['외근','연차','출장','휴가'].includes(v) ? v : '';
 }
 function isWorkType(v) {
   return getWorkOnly(v) !== '';
