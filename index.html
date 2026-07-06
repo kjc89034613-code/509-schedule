@@ -304,10 +304,12 @@
   }
   .msg-bubble-wrap:hover .msg-del-btn { opacity:1; }
   .msg-del-btn:hover { background:rgba(239,68,68,0.8); color:#fff; border-color:#ef4444; }
-  /* 모바일에서는 항상 표시 */
+  /* 모바일: 기본 숨김, 선택된 메시지만 표시 */
   @media(max-width:860px){
-    .msg-del-btn { opacity:0.5; }
-    .msg-bubble-wrap:hover .msg-del-btn { opacity:1; }
+    .msg-del-btn { opacity:0; }
+    .msg-bubble-wrap:hover .msg-del-btn { opacity:0; }
+    .msg.selected .msg-del-btn { opacity:1; background:rgba(239,68,68,0.85); color:#fff; border-color:#ef4444; width:26px; height:26px; }
+    .msg.selected .msg-bubble { outline:2px solid rgba(59,130,246,0.5); outline-offset:2px; }
   }
   .msg-bubble img { max-width:200px; max-height:200px; border-radius:8px; display:block; cursor:pointer; }
   .msg-time { font-size:11px; color:#d1d5db; }
@@ -1578,7 +1580,7 @@ function renderGroupChat(data){
     const bubbleClass = (isOwner ? "msg-bubble owner-bubble" : "msg-bubble other-bubble") + imgCls;
     // 본인(현재 방장) 메시지에만 삭제 버튼
     const delBtn = isOwner ? `<button class="msg-del-btn" onclick="deleteChatMessage('${m.id}', event)" title="삭제"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></button>` : '';
-    return `<div class="msg ${side}" data-msg-id="${m.id}">
+    return `<div class="msg ${side}" data-msg-id="${m.id}" onclick="toggleMsgSelect(this, event)">
       ${!isOwner?'<div class="msg-sender">'+escHtml(m.sender)+'</div>':''}
       <div class="msg-row">
         ${ball}
@@ -1594,6 +1596,26 @@ function renderGroupChat(data){
   }).join('');
   box.scrollTop=box.scrollHeight;
 }
+
+// 모바일 메시지 선택 토글
+function toggleMsgSelect(el, e) {
+  // 삭제 버튼이나 이미지 클릭이면 무시
+  if (e.target.closest('.msg-del-btn') || e.target.tagName === 'IMG') return;
+  // 모바일이 아니면 무시
+  if (window.innerWidth > 860) return;
+  // 이미 선택된 것이면 해제, 아니면 다른 것들 해제하고 선택
+  const wasSelected = el.classList.contains('selected');
+  document.querySelectorAll('.msg.selected').forEach(m => m.classList.remove('selected'));
+  if (!wasSelected) el.classList.add('selected');
+}
+
+// 채팅 메시지 외부 클릭 시 선택 해제
+document.addEventListener('click', function(e) {
+  if (window.innerWidth > 860) return;
+  if (!e.target.closest('.msg')) {
+    document.querySelectorAll('.msg.selected').forEach(m => m.classList.remove('selected'));
+  }
+});
 
 // 채팅 메시지 삭제
 async function deleteChatMessage(id, e) {
