@@ -715,7 +715,7 @@
 
     <div class="grid-form">
       <!-- 담당자 -->
-      <div class="gf-label">담당자 <span style="color:#dc2626">*</span></div>
+      <div class="gf-label">담당자</div>
       <div class="gf-input">
         <div class="emp-chips" id="empChips">
           <div class="emp-chip" data-name="구자천" onclick="selectEmp(this)">구자천</div>
@@ -1085,7 +1085,9 @@ function changeMonth(d) {
 function openModal(prefill=null) {
   document.getElementById('modalTitle').textContent = prefill?'일정 수정':'일정 추가';
   document.getElementById('editId').value = prefill?prefill.id:'';
-  document.getElementById('fEmployee').value = prefill?prefill.employee:'';
+  // 담당자 - 항상 현재 방장으로 고정
+  const activeEmp = prefill ? prefill.employee : (currentUser || '');
+  document.getElementById('fEmployee').value = activeEmp;
   document.getElementById('fDate').value = prefill?prefill.date:'';
   document.getElementById('fDateEnd').value = prefill?(prefill.date_end||prefill.date||''):'';
   setTime('fStartHour','fStartMin', prefill?(prefill.time_start||''):'');
@@ -1100,9 +1102,22 @@ function openModal(prefill=null) {
   const isAllDay = prefill && !prefill.time_start && !prefill.time_end;
   document.getElementById('fAllDay').checked = !!isAllDay;
   toggleAllDay();
+  // 담당자 chip - 현재 방장만 활성화 색상, 다른 사람은 비활성화
   document.querySelectorAll('.emp-chip').forEach(c => {
-    c.className='emp-chip';
-    if(prefill&&c.dataset.name===prefill.employee) c.classList.add(getEmpInfo(prefill.employee).activeClass);
+    c.className = 'emp-chip';
+    const name = c.dataset.name;
+    if (name === activeEmp) {
+      c.classList.add(getEmpInfo(name).activeClass);
+      c.style.opacity = '1';
+      c.style.pointerEvents = 'auto';
+      c.style.cursor = 'default';
+    } else {
+      // 다른 사람 - 비활성화 (선택 불가)
+      c.classList.add('disabled');
+      c.style.opacity = '0.35';
+      c.style.pointerEvents = 'none';
+      c.style.cursor = 'not-allowed';
+    }
   });
   document.getElementById('empWarn').style.display = 'none';
   updateModalLock();
