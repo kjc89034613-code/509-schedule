@@ -40,34 +40,34 @@
     .col-time { width:19% !important; }
     .col-site { width:22% !important; }
     .col-purpose { width:27% !important; }
-    /* 헤더/셀 폰트 & 패딩 축소 */
-    thead th { font-size:11px !important; padding:7px 3px !important; }
-    tbody td { font-size:11px !important; padding:6px 3px !important; }
-    /* 긴 텍스트 ... 처리, 셀 높이 유지 */
-    tbody td { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; height:36px; vertical-align:middle; }
-    .pill { font-size:10px !important; padding:2px 7px !important; }
+    /* 헤더/셀 폰트 & 패딩 축소 - 4행 고정에 맞게 */
+    thead th { font-size:11px !important; padding:5px 3px !important; height:28px !important; }
+    tbody td { font-size:11px !important; padding:4px 3px !important; height:30px !important; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; vertical-align:middle; }
+    /* 빈 행 - 클릭 불가 */
+    .filler-row { pointer-events:none; }
+    .filler-row td { border-bottom:1px solid #edf2fa; background:#fff !important; }
+    .pill { font-size:10px !important; padding:1px 6px !important; }
     /* 페이지 여백 최소화 - 화면 꽉 차게 */
     .app { padding:8px; }
-    .header { margin:0 0 8px 0 !important; padding:10px 12px !important; min-height:auto !important; }
+    .header { margin:0 0 6px 0 !important; padding:10px 12px !important; min-height:auto !important; }
     .header h1 { font-size:17px !important; }
-    /* 세부 일정 여백 축소 - 정확히 4행까지 표시 */
-    .table-wrap { max-height:180px !important; margin-bottom:8px !important; }
-    .section-header { font-size:15px !important; padding:4px 0 6px 0 !important; margin-bottom:4px !important; }
-    /* 월간 일정표 헤더는 위에 여백 더 크게 */
+    /* 세부 일정 - 4행 딱 맞게 (스크롤 없음) */
+    .table-wrap { max-height:none !important; margin-bottom:6px !important; overflow:hidden !important; }
+    .section-header { font-size:15px !important; padding:2px 0 4px 0 !important; margin-bottom:3px !important; }
+    /* 월간 일정표 헤더는 위에 약간의 여백 */
     .section-header + * + .section-header,
     .table-wrap + .section-header,
-    .section-header:not(:first-of-type) { margin-top:16px !important; }
+    .section-header:not(:first-of-type) { margin-top:10px !important; }
     .section-header span { font-size:15px !important; }
     #calCount { font-size:11px !important; font-weight:600 !important; }
-    /* 달력 네비게이션 컴팩트 - 월간 일정표 위 간격 축소 */
+    /* 달력 네비게이션 컴팩트 */
     .month-nav-inline span { font-size:12px !important; min-width:70px !important; }
     .nav-btn-mini { width:20px !important; height:20px !important; }
-    /* 월간 일정표 헤더와 legend 위쪽 여백 축소 */
-    .left-col > div[style*="margin-bottom:10px"] { margin-bottom:4px !important; }
-    /* 달력 셀 크기 - 화면 폭에 맞춰 자동 축소 */
-    .cal-cell { height:48px !important; min-height:48px !important; padding:2px !important; overflow:hidden; box-sizing:border-box; }
-    .cal-grid { margin-bottom:10px !important; margin-top:0 !important; }
-    .cal-head { padding:6px 4px !important; font-size:11px !important; }
+    .left-col > div[style*="margin-bottom:10px"] { margin-bottom:3px !important; }
+    /* 달력 셀 크기 - 5주도 화면에 들어가게 축소 */
+    .cal-cell { height:42px !important; min-height:42px !important; padding:2px !important; overflow:hidden; box-sizing:border-box; }
+    .cal-grid { margin-bottom:8px !important; margin-top:0 !important; }
+    .cal-head { padding:4px 4px !important; font-size:11px !important; }
     .cal-num { font-size:11px !important; }
     .cal-event { font-size:8px !important; padding:1px 2px !important; margin-bottom:1px !important; border-radius:2px !important; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; line-height:11px !important; }
     /* 일정 추가/상세 팝업 - 화면에 맞게 축소 */
@@ -960,7 +960,7 @@ function renderTable(data) {
   }
   if (mobile) {
     // 모바일: 구분 / MM-DD / 시 / 현장명 / 목적 (체크박스 없음, 행 클릭시 상세 팝업)
-    tbody.innerHTML = data.map(s => {
+    let rowsHtml = data.map(s => {
       const emp = getEmpInfo(s.employee);
       let dateStr = '';
       if (s.date) {
@@ -983,6 +983,12 @@ function renderTable(data) {
         <td>${escHtml(s.purpose||'')}</td>
       </tr>`;
     }).join('');
+    // 4행 미만이면 빈 행으로 채우기
+    const emptyRows = Math.max(0, 4 - data.length);
+    for (let i = 0; i < emptyRows; i++) {
+      rowsHtml += '<tr class="filler-row"><td></td><td></td><td></td><td></td><td></td></tr>';
+    }
+    tbody.innerHTML = rowsHtml;
     updateBulkBar();
   } else {
     // 웹: 기존 구조 그대로 (8개 컬럼 - 장소/근무 분리)
@@ -1423,7 +1429,7 @@ function renderChatMessages(data){
     const ts=String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0');
     let bubbleContent;
     if(m.message.startsWith('data:image/')){
-      bubbleContent=`<img src="${m.message}" alt="이미지" onclick="viewImg(this.src)">`;
+      bubbleContent=`<img src="${escHtml(m.message)}" alt="이미지" onclick="viewImg(this.src)">`;
     } else {
       bubbleContent=escHtml(m.message);
     }
@@ -1572,7 +1578,7 @@ function renderGroupChat(data){
     const ts=String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0');
     let bubbleContent;
     if(m.message.startsWith('data:image/')){
-      bubbleContent=`<img src="${m.message}" alt="이미지" onclick="viewImg(this.src)">`;
+      bubbleContent=`<img src="${escHtml(m.message)}" alt="이미지" onclick="viewImg(this.src)">`;
     } else {
       bubbleContent=escHtml(m.message);
     }
@@ -1657,7 +1663,7 @@ function renderAllChatMessages(data){
     const ts=String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0');
     let bubbleContent;
     if(m.message.startsWith('data:image/')){
-      bubbleContent=`<img src="${m.message}" alt="이미지" onclick="viewImg(this.src)">`;
+      bubbleContent=`<img src="${escHtml(m.message)}" alt="이미지" onclick="viewImg(this.src)">`;
     } else {
       bubbleContent=escHtml(m.message);
     }
