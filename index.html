@@ -66,11 +66,12 @@
     /* 오른쪽 잘림 방지 */
     body { overflow-x:hidden; }
     .mobile-tab-content { max-width:100%; overflow-x:hidden; }
-    /* 하단 범례 - 세부 일정 / 일정 등록 탭 공통 */
-    .tab-bottom-legend { display:flex; justify-content:flex-end; margin-top:8px; padding:0 4px; }
-    .tab-bottom-legend .cal-legend { gap:8px !important; }
-    .tab-bottom-legend .cal-legend-item { font-size:11px !important; font-weight:600 !important; color:var(--text2) !important; gap:4px !important; }
-    .tab-bottom-legend .cal-legend-dot { width:10px !important; height:10px !important; }
+    /* 하단 범례 - 모바일에서는 화면 하단 고정으로 대체 */
+    .mobile-tab-content .tab-bottom-legend { display:none !important; }
+    /* 화면 하단 고정 범례 */
+    .mobile-fixed-legend { display:flex !important; }
+    /* 의사소통 탭에서는 고정 범례 숨김 */
+    body.tab-chat .mobile-fixed-legend { display:none !important; }
     /* 세부 일정 - 탭 전체 화면 사용, 자동 스크롤 */
     .table-wrap { max-height:calc(100vh - 200px) !important; margin-bottom:6px !important; overflow-y:auto !important; overflow-x:hidden !important; }
     /* 섹션 헤더 - 두 탭 모두 동일한 폰트/높이 */
@@ -106,8 +107,8 @@
     .nav-btn-mini:hover { background:linear-gradient(180deg,#eff6ff 0%,#dbeafe 100%) !important; }
     .nav-btn-mini:active { transform:scale(0.95); }
     .left-col > div[style*="margin-bottom:10px"] { margin-bottom:3px !important; }
-    /* 달력 셀 크기 - 하루 3개 일정 기본 표시 */
-    .cal-cell { height:92px !important; min-height:92px !important; padding:3px !important; overflow:hidden; box-sizing:border-box; }
+    /* 달력 셀 크기 - 컴팩트하게 (2-3개 일정 표시) */
+    .cal-cell { height:72px !important; min-height:72px !important; padding:2px !important; overflow:hidden; box-sizing:border-box; }
     .cal-grid { margin-bottom:8px !important; margin-top:0 !important; }
     .cal-head { padding:5px 4px !important; font-size:11px !important; }
     .cal-num { font-size:11px !important; }
@@ -260,6 +261,34 @@
   .cal-legend { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
   .cal-legend-item { display:flex; align-items:center; gap:5px; font-size:12px; color:var(--text2); font-weight:600; }
   .cal-legend-dot { width:12px; height:12px; border-radius:3px; box-shadow:0 1px 2px rgba(0,0,0,0.1); }
+
+  /* 모바일 고정 범례 - 화면 하단 오른쪽 (탭바 위) */
+  .mobile-fixed-legend {
+    display:none;
+    position:fixed;
+    bottom:92px; right:10px;
+    z-index:65;
+    gap:8px;
+    align-items:center;
+    padding:6px 10px;
+    background:rgba(255,255,255,0.95);
+    border:1px solid #e2e8f0;
+    border-radius:20px;
+    box-shadow:0 3px 10px rgba(0,0,0,0.12);
+    backdrop-filter:blur(6px);
+    pointer-events:none;
+  }
+  .mobile-fixed-legend .cal-legend-item { display:flex; align-items:center; gap:3px; font-size:10px; font-weight:700; color:#475569; white-space:nowrap; }
+  .mobile-fixed-legend .cal-legend-dot { width:8px; height:8px; border-radius:2px; }
+
+  /* 웹에서 하단 범례 - tab-schedule의 것만 표시 */
+  @media(min-width:861px) {
+    .tab-schedule .tab-bottom-legend { display:flex; justify-content:flex-end; margin-top:4px; margin-bottom:10px; }
+    .tab-calendar .tab-bottom-legend { display:none; }
+    .tab-bottom-legend .cal-legend { gap:14px; }
+    .tab-bottom-legend .cal-legend-item { font-size:12px; font-weight:600; color:var(--text2); gap:5px; }
+    .tab-bottom-legend .cal-legend-dot { width:12px; height:12px; }
+  }
 
   /* Month nav */
   .month-nav { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
@@ -745,7 +774,7 @@
         </button>
       </div>
 
-      <!-- 하단 범례 -->
+      <!-- 웹 전용 하단 범례 -->
       <div class="tab-bottom-legend">
         <div class="cal-legend">
           <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--gjc-cal)"></div>구자천</div>
@@ -771,15 +800,6 @@
         </div>
       </div>
       <div class="cal-grid" id="calGrid"></div>
-
-      <!-- 하단 범례 -->
-      <div class="tab-bottom-legend">
-        <div class="cal-legend">
-          <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--gjc-cal)"></div>구자천</div>
-          <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--gsm-cal)"></div>공석민</div>
-          <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--oh-cal)"></div>오세훈</div>
-        </div>
-      </div>
 
       </div>
       <!-- ▲ 탭 컨텐츠 2 끝 -->
@@ -841,6 +861,13 @@
 <!-- 이미지 전체보기 -->
 <div class="img-overlay hidden" id="imgOverlay" onclick="this.classList.add('hidden')">
   <img id="imgOverlayImg" src="" alt="">
+</div>
+
+<!-- 모바일 고정 범례 (오른쪽 아래, 탭바 위) -->
+<div class="mobile-fixed-legend" id="mobileFixedLegend">
+  <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--gjc-cal)"></div>구자천</div>
+  <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--gsm-cal)"></div>공석민</div>
+  <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--oh-cal)"></div>오세훈</div>
 </div>
 
 <!-- 모바일 FAB (채팅 열기 버튼) -->
@@ -2163,6 +2190,63 @@ window.addEventListener('resize', () => {
     document.body.classList.add('tab-schedule');
   }
 });
+
+// ============ 모바일 스와이프 제스처 - 좌우로 탭 전환 ============
+(function setupSwipe() {
+  const TABS = ['schedule','calendar','chat'];
+  const MIN_SWIPE_DIST = 60;   // 최소 이동 거리 (px)
+  const MAX_VERTICAL_DEV = 50; // 세로 이동 최대 허용 (px)
+  const EDGE_INSENSITIVE = 20; // 왼쪽 가장자리 뒤로가기 방지 영역
+  let sx = 0, sy = 0, tracking = false;
+
+  function currentTab() {
+    if (document.body.classList.contains('tab-calendar')) return 'calendar';
+    if (document.body.classList.contains('tab-chat')) return 'chat';
+    return 'schedule';
+  }
+  function isTargetOk(target) {
+    // 스크롤 가능한 요소나 스와이프 컨트롤이 있는 곳은 제외
+    if (!target) return true;
+    if (target.closest && (
+        target.closest('.chat-messages') ||
+        target.closest('.table-wrap') ||
+        target.closest('.modal-overlay') ||
+        target.closest('.plus-menu') ||
+        target.closest('.cal-cell') ||
+        target.closest('textarea') ||
+        target.closest('input') ||
+        target.closest('select') ||
+        target.closest('button')
+      )) return false;
+    return true;
+  }
+  document.addEventListener('touchstart', (e) => {
+    if (window.innerWidth > 860) return;
+    if (!e.touches || e.touches.length !== 1) return;
+    const t = e.touches[0];
+    if (t.clientX < EDGE_INSENSITIVE || t.clientX > window.innerWidth - EDGE_INSENSITIVE) return;
+    if (!isTargetOk(e.target)) return;
+    sx = t.clientX; sy = t.clientY; tracking = true;
+  }, { passive:true });
+
+  document.addEventListener('touchend', (e) => {
+    if (!tracking) return;
+    tracking = false;
+    if (!e.changedTouches || !e.changedTouches[0]) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - sx;
+    const dy = t.clientY - sy;
+    if (Math.abs(dy) > MAX_VERTICAL_DEV) return; // 세로 스크롤로 판단
+    if (Math.abs(dx) < MIN_SWIPE_DIST) return;
+    const cur = TABS.indexOf(currentTab());
+    if (cur < 0) return;
+    let next;
+    if (dx < 0 && cur < TABS.length - 1) next = TABS[cur+1]; // 왼쪽으로 밀기 → 다음 탭
+    else if (dx > 0 && cur > 0) next = TABS[cur-1]; // 오른쪽으로 밀기 → 이전 탭
+    if (next) setMobileTab(next);
+  }, { passive:true });
+})();
+
 function buildTimeOptions() {
   // 시간: 08 ~ 18
   const buildHours = (id) => {
