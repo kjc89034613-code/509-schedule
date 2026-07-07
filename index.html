@@ -2,6 +2,9 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>직원 일정 공유</title>
 <style>
@@ -51,8 +54,8 @@
     .app { padding:8px; }
     .header { margin:0 0 6px 0 !important; padding:10px 12px !important; min-height:auto !important; }
     .header h1 { font-size:17px !important; }
-    /* 세부 일정 - 4행 딱 맞게 (스크롤 없음) */
-    .table-wrap { max-height:none !important; margin-bottom:6px !important; overflow:hidden !important; }
+    /* 세부 일정 - 4행 표시, 그 이상은 스크롤 */
+    .table-wrap { max-height:150px !important; margin-bottom:6px !important; overflow-y:auto !important; overflow-x:hidden !important; }
     .section-header { font-size:15px !important; padding:2px 0 4px 0 !important; margin-bottom:3px !important; }
     /* 월간 일정표 헤더는 위에 약간의 여백 */
     .section-header + * + .section-header,
@@ -960,7 +963,7 @@ function renderTable(data) {
   }
   if (mobile) {
     // 모바일: 구분 / MM-DD / 시 / 현장명 / 목적 (체크박스 없음, 행 클릭시 상세 팝업)
-    let rowsHtml = data.map(s => {
+    tbody.innerHTML = data.map(s => {
       const emp = getEmpInfo(s.employee);
       let dateStr = '';
       if (s.date) {
@@ -983,12 +986,6 @@ function renderTable(data) {
         <td>${escHtml(s.purpose||'')}</td>
       </tr>`;
     }).join('');
-    // 4행 미만이면 빈 행으로 채우기
-    const emptyRows = Math.max(0, 4 - data.length);
-    for (let i = 0; i < emptyRows; i++) {
-      rowsHtml += '<tr class="filler-row"><td></td><td></td><td></td><td></td><td></td></tr>';
-    }
-    tbody.innerHTML = rowsHtml;
     updateBulkBar();
   } else {
     // 웹: 기존 구조 그대로 (8개 컬럼 - 장소/근무 분리)
@@ -1211,7 +1208,7 @@ function openModalWithDate(dateStr) {
   document.getElementById('fDateEnd').value = dateStr;
 }
 
-// 달력 날짜 클릭 → 일정 없으면 추가 팝업, 1개면 상세 팝업, 여러 개면 목록 팝업
+// 달력 날짜 클릭 → 일정 없으면 추가 팝업, 있으면 목록 팝업 (추가 버튼 포함)
 function onDateClick(dateStr) {
   const dayEvents = allSchedules.filter(s => {
     if (!s.date) return false;
@@ -1220,11 +1217,8 @@ function onDateClick(dateStr) {
   });
   if (dayEvents.length === 0) {
     openModalWithDate(dateStr);
-  } else if (dayEvents.length === 1) {
-    // 일정이 1개면 바로 상세 팝업
-    showDetailPopup(dayEvents[0].id);
   } else {
-    // 여러 개면 목록 팝업
+    // 1개든 여러 개든 목록 팝업 (하단에 "이 날짜에 일정 추가" 버튼)
     showDayListPopup(dateStr, dayEvents);
   }
 }
@@ -1429,7 +1423,7 @@ function renderChatMessages(data){
     const ts=String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0');
     let bubbleContent;
     if(m.message.startsWith('data:image/')){
-      bubbleContent=`<img src="${escHtml(m.message)}" alt="이미지" onclick="viewImg(this.src)">`;
+      if(m.message.length > 500000) { bubbleContent = "[이미지 크기 초과]"; } else { const safeSrc = escHtml(m.message); bubbleContent = `<img src="${safeSrc}" alt="이미지" onclick="viewImg(this.src)" onerror="this.style.display='none';this.insertAdjacentHTML('afterend','[이미지 로드 실패]')">`; }
     } else {
       bubbleContent=escHtml(m.message);
     }
@@ -1531,7 +1525,16 @@ async function updateUnreadBadges(){
     }catch(e){}
   }
 }
-let lastSeenMsgCount = 0;
+// 마지막으로 확인한 다른 사람 메시지 수 (사용자별 저장)
+function getSeenKey() { return 'lastSeenMsgCount_' + (currentUser||'anon'); }
+function getLastSeen() { 
+  try { return parseInt(localStorage.getItem(getSeenKey())) || 0; } 
+  catch(e) { return 0; } 
+}
+function setLastSeen(n) { 
+  try { localStorage.setItem(getSeenKey(), String(n)); } 
+  catch(e) {} 
+}
 
 async function loadGroupChat(){
   if(!currentUser||!checkConfig())return;
@@ -1553,12 +1556,19 @@ function updateFabBadge(data) {
   const othersCount = data.filter(m => m.sender !== currentUser).length;
   // 팝업이 열려있으면 → 뱃지 리셋 + 마지막 카운트 저장
   if (overlay.classList.contains('open')) {
-    lastSeenMsgCount = othersCount;
+    setLastSeen(othersCount);
+    fab.classList.add('hidden-badge');
+    return;
+  }
+  // 웹 모드(오른쪽 채팅창 보이는 상태)에서도 카운트 저장 - 이미 보고 있으므로
+  if (window.innerWidth > 860) {
+    setLastSeen(othersCount);
     fab.classList.add('hidden-badge');
     return;
   }
   // 팝업이 닫힌 상태에서 새 메시지가 있는지
-  const unread = othersCount - lastSeenMsgCount;
+  const lastSeen = getLastSeen();
+  const unread = othersCount - lastSeen;
   if (unread > 0) {
     badge.textContent = unread > 99 ? '99+' : unread;
     fab.classList.remove('hidden-badge');
@@ -1578,7 +1588,7 @@ function renderGroupChat(data){
     const ts=String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0');
     let bubbleContent;
     if(m.message.startsWith('data:image/')){
-      bubbleContent=`<img src="${escHtml(m.message)}" alt="이미지" onclick="viewImg(this.src)">`;
+      if(m.message.length > 500000) { bubbleContent = "[이미지 크기 초과]"; } else { const safeSrc = escHtml(m.message); bubbleContent = `<img src="${safeSrc}" alt="이미지" onclick="viewImg(this.src)" onerror="this.style.display='none';this.insertAdjacentHTML('afterend','[이미지 로드 실패]')">`; }
     } else {
       bubbleContent=escHtml(m.message);
     }
@@ -1663,7 +1673,7 @@ function renderAllChatMessages(data){
     const ts=String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0');
     let bubbleContent;
     if(m.message.startsWith('data:image/')){
-      bubbleContent=`<img src="${escHtml(m.message)}" alt="이미지" onclick="viewImg(this.src)">`;
+      if(m.message.length > 500000) { bubbleContent = "[이미지 크기 초과]"; } else { const safeSrc = escHtml(m.message); bubbleContent = `<img src="${safeSrc}" alt="이미지" onclick="viewImg(this.src)" onerror="this.style.display='none';this.insertAdjacentHTML('afterend','[이미지 로드 실패]')">`; }
     } else {
       bubbleContent=escHtml(m.message);
     }
