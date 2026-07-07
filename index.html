@@ -65,17 +65,18 @@
     .header h1 { font-size:17px !important; }
     /* 세부 일정 - 탭 전체 화면 사용, 자동 스크롤 */
     .table-wrap { max-height:calc(100vh - 200px) !important; margin-bottom:6px !important; overflow-y:auto !important; overflow-x:hidden !important; }
-    .section-header { font-size:15px !important; padding:2px 0 4px 0 !important; margin-bottom:3px !important; }
+    /* 섹션 헤더 - 두 탭 모두 동일한 폰트/높이 */
+    .section-header { font-size:16px !important; padding:2px 0 6px 0 !important; margin-bottom:6px !important; min-height:32px !important; display:flex !important; align-items:center !important; justify-content:space-between !important; }
     /* 월간 일정표 헤더는 위에 약간의 여백 */
     .section-header + * + .section-header,
     .table-wrap + .section-header,
     .section-header:not(:first-of-type) { margin-top:10px !important; }
-    .section-header span { font-size:15px !important; }
+    .section-header > span { font-size:16px !important; font-weight:800 !important; display:flex !important; align-items:center !important; gap:7px !important; line-height:1.2 !important; }
     #calCount { font-size:11px !important; font-weight:600 !important; }
-    /* 달력 네비게이션 - 월간 일정표 헤더와 같은 크기 */
-    .month-nav-inline span { font-size:15px !important; font-weight:800 !important; min-width:88px !important; color:#1e293b !important; }
-    .month-nav-inline { background:transparent !important; border:none !important; padding:0 !important; gap:6px !important; }
-    .nav-btn-mini { width:24px !important; height:24px !important; font-size:14px !important; }
+    /* 달력 네비게이션 - 월간 일정표 헤더와 완전 동일한 크기/높이 */
+    .section-header .month-nav-inline { background:transparent !important; border:none !important; padding:0 !important; gap:6px !important; display:inline-flex !important; align-items:center !important; }
+    .section-header .month-nav-inline span { font-size:16px !important; font-weight:800 !important; min-width:92px !important; color:#1e293b !important; line-height:1.2 !important; text-align:center !important; }
+    .nav-btn-mini { width:26px !important; height:26px !important; font-size:14px !important; }
     .left-col > div[style*="margin-bottom:10px"] { margin-bottom:3px !important; }
     /* 달력 셀 크기 - 하루 3개 일정 기본 표시 */
     .cal-cell { height:80px !important; min-height:80px !important; padding:3px !important; overflow:hidden; box-sizing:border-box; }
@@ -1972,7 +1973,7 @@ function applyChatLayout() {
       // 왼쪽 상단: 일정으로 돌아가기 버튼
       const backBtn = document.createElement('button');
       backBtn.className = 'mobile-chat-back';
-      backBtn.onclick = closeMobileChat;
+      backBtn.onclick = () => setMobileTab('schedule');
       backBtn.innerHTML = '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg><span>일정</span>';
       mobileContainer.appendChild(chatPanel);
       chatPanel.appendChild(backBtn);
