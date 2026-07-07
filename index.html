@@ -230,7 +230,7 @@
   .nav-btn-mini:hover { background:#eff6ff; border-color:#93c5fd; color:#1e40af; }
 
   /* Calendar */
-  .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:1px; background:var(--border); border:1px solid var(--border); border-radius:12px; overflow:hidden; margin-bottom:20px; box-shadow:var(--shadow-md); }
+  .cal-grid { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:1px; background:var(--border); border:1px solid var(--border); border-radius:12px; overflow:hidden; margin-bottom:20px; box-shadow:var(--shadow-md); }
   .cal-head {
     background:linear-gradient(180deg,#dbeafe 0%,#bfdbfe 100%); color:#1a2332;
     padding:10px 4px; text-align:center; font-size:12px; font-weight:800;
@@ -238,7 +238,7 @@
   }
   .cal-head.sun { background:linear-gradient(180deg,#fecaca 0%,#fca5a5 100%); color:#7f1d1d; }
   .cal-head.sat { background:linear-gradient(180deg,#ddd6fe 0%,#c4b5fd 100%); color:#4c1d95; }
-  .cal-cell { background:var(--surface); min-height:64px; padding:4px; transition:background .15s; }
+  .cal-cell { background:var(--surface); min-height:64px; padding:4px; transition:background .15s; min-width:0; overflow:hidden; }
   .cal-cell:hover { background:#f0f7ff; }
   .cal-cell.other-month { background:#f8fafc; }
   .cal-cell.other-month:hover { background:#f0f4f8; }
@@ -246,7 +246,7 @@
   .cal-num.today { background:linear-gradient(180deg,#60a5fa 0%,#3b82f6 100%); color:#fff; box-shadow:var(--shadow-sm); }
   .cal-num.sun-color { color:#dc2626; }
   .cal-num.sat-color { color:#7c3aed; }
-  .cal-event { font-size:10px; padding:2px 5px; border-radius:4px; margin-bottom:2px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; line-height:14px; font-weight:600; color:#fff; box-shadow:var(--shadow-sm); text-shadow:0 1px 1px rgba(0,0,0,0.15); }
+  .cal-event { font-size:10px; padding:2px 5px; border-radius:4px; margin-bottom:2px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; line-height:14px; font-weight:600; color:#fff; box-shadow:var(--shadow-sm); text-shadow:0 1px 1px rgba(0,0,0,0.15); max-width:100%; box-sizing:border-box; }
   .cal-event.oh{background:linear-gradient(180deg,#3b82f6 0%,#1e40af 100%);}
   .cal-event.gjc{background:linear-gradient(180deg,#22c55e 0%,#15803d 100%);}
   .cal-event.gsm{background:linear-gradient(180deg,#ef4444 0%,#b91c1c 100%);}
@@ -264,6 +264,25 @@
   /* 메시지 배치 */
   .msg { max-width:82%; display:flex; flex-direction:column; gap:2px; }
   .msg-row { display:flex; gap:6px; align-items:flex-start; }
+  /* 이름 아바타 - 당구공 대신 텍스트 이름 표시 */
+  .name-avatar {
+    padding:3px 9px;
+    border-radius:14px;
+    font-size:11px;
+    font-weight:800;
+    color:#fff;
+    flex-shrink:0;
+    box-shadow:0 1px 3px rgba(0,0,0,0.15);
+    text-shadow:0 1px 1px rgba(0,0,0,0.15);
+    letter-spacing:0.01em;
+    white-space:nowrap;
+    line-height:1.4;
+    align-self:flex-start;
+    margin-top:2px;
+  }
+  .name-avatar.pill-gjc { background:linear-gradient(180deg,#22c55e 0%,#15803d 100%); }
+  .name-avatar.pill-gsm { background:linear-gradient(180deg,#ef4444 0%,#b91c1c 100%); }
+  .name-avatar.pill-oh  { background:linear-gradient(180deg,#3b82f6 0%,#1e40af 100%); }
   .msg.mine { align-self:flex-end; align-items:flex-end; }
   .msg.theirs { align-self:flex-start; align-items:flex-start; }
   .msg.mine .msg-row { flex-direction:row-reverse; }
@@ -1446,7 +1465,7 @@ function renderChatMessages(data){
     const isOwner=m.sender===currentUser;
     const side = isOwner ? 'theirs' : 'mine';
     const t=new Date(m.created_at);
-    const ts=String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0');
+    const ts=formatMsgTime(t);
     let bubbleContent;
     if(m.message.startsWith('data:image/')){
       const safeSrc = escHtml(m.message); bubbleContent = `<img src="${safeSrc}" alt="이미지" onclick="viewImg(this.src)" onerror="this.style.display='none';this.insertAdjacentHTML('afterend','[이미지 로드 실패]')">`;
@@ -1627,27 +1646,32 @@ function updateFabBadge(data) {
 function renderGroupChat(data){
   const box=document.getElementById('chatMessages');
   if(!data.length){box.innerHTML='<div class="chat-empty">아직 대화가 없습니다<br><small style="color:var(--text2)">첫 메시지를 보내보세요</small></div>';return;}
+  // 렌더링 전 - 사용자가 맨 아래 근처에 있었는지 확인 (60px 이내)
+  const wasAtBottom = (box.scrollHeight - box.scrollTop - box.clientHeight) < 60;
+  const prevScrollTop = box.scrollTop;
+  const prevScrollHeight = box.scrollHeight;
   box.innerHTML=data.map(m=>{
     // 방장(currentUser) 메시지는 왼쪽, 나머지는 오른쪽
     const isOwner=m.sender===currentUser;
     const side = isOwner ? 'theirs' : 'mine';
     const t=new Date(m.created_at);
-    const ts=String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0');
+    const ts=formatFullMsgTime(t);
     let bubbleContent;
     if(m.message.startsWith('data:image/')){
       const safeSrc = escHtml(m.message); bubbleContent = `<img src="${safeSrc}" alt="이미지" onclick="viewImg(this.src)" onerror="this.style.display='none';this.insertAdjacentHTML('afterend','[이미지 로드 실패]')">`;
     } else {
       bubbleContent=escHtml(m.message);
     }
-    const ball = getBilliard(m.sender);
+    // 아바타 - 이름 텍스트로 (본인만 파란색, 다른 사람은 회색)
+    const emp = getEmpInfo(m.sender);
+    const nameAvatar = `<div class="name-avatar ${emp.pillClass}">${escHtml(m.sender)}</div>`;
     const imgCls = m.message.startsWith("data:image/") ? " has-image" : "";
     const bubbleClass = (isOwner ? "msg-bubble owner-bubble" : "msg-bubble other-bubble") + imgCls;
     // 본인(현재 방장) 메시지에만 삭제 버튼
     const delBtn = isOwner ? `<button class="msg-del-btn" onclick="deleteChatMessage('${m.id}', event)" title="삭제"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></button>` : '';
     return `<div class="msg ${side}" data-msg-id="${m.id}" onclick="toggleMsgSelect(this, event)">
-      ${!isOwner?'<div class="msg-sender">'+escHtml(m.sender)+'</div>':''}
       <div class="msg-row">
-        ${ball}
+        ${nameAvatar}
         <div style="display:flex;flex-direction:column;gap:2px;${side==='mine'?'align-items:flex-end;':''}">
           <div class="msg-bubble-wrap">
             <div class="${bubbleClass}">${bubbleContent}</div>
@@ -1658,7 +1682,24 @@ function renderGroupChat(data){
       </div>
     </div>`;
   }).join('');
-  box.scrollTop=box.scrollHeight;
+  // 스크롤 위치 복원 - 맨 아래에 있었으면 자동으로 맨 아래로, 아니면 위치 유지
+  if (wasAtBottom) {
+    box.scrollTop = box.scrollHeight;
+  } else {
+    // 새 메시지가 추가되어도 사용자가 보고 있던 위치 유지
+    const heightDiff = box.scrollHeight - prevScrollHeight;
+    box.scrollTop = prevScrollTop + heightDiff;
+  }
+}
+
+// 채팅 메시지 - 항상 전체 날짜/시간 표시 (26년 07월 07일 09:56)
+function formatFullMsgTime(t) {
+  const yy = String(t.getFullYear()).slice(2);
+  const mm = String(t.getMonth()+1).padStart(2,'0');
+  const dd = String(t.getDate()).padStart(2,'0');
+  const HH = String(t.getHours()).padStart(2,'0');
+  const MM = String(t.getMinutes()).padStart(2,'0');
+  return `${yy}년 ${mm}월 ${dd}일 ${HH}:${MM}`;
 }
 
 // 모바일 메시지 선택 토글
@@ -1717,7 +1758,7 @@ function renderAllChatMessages(data){
     const isOwner=m.sender===currentUser;
     const side = isOwner ? 'theirs' : 'mine';
     const t=new Date(m.created_at);
-    const ts=String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0');
+    const ts=formatMsgTime(t);
     let bubbleContent;
     if(m.message.startsWith('data:image/')){
       const safeSrc = escHtml(m.message); bubbleContent = `<img src="${safeSrc}" alt="이미지" onclick="viewImg(this.src)" onerror="this.style.display='none';this.insertAdjacentHTML('afterend','[이미지 로드 실패]')">`;
@@ -1761,6 +1802,22 @@ function exportCSV(){
 
 // ── Util ──────────────────────────────────────────────────
 function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+// 채팅 메시지 시간 포맷 (오늘이면 시간만, 어제면 "어제 HH:mm", 그 외 "M/D HH:mm")
+function formatMsgTime(t) {
+  const now = new Date();
+  const HH = String(t.getHours()).padStart(2,'0');
+  const MM = String(t.getMinutes()).padStart(2,'0');
+  const time = HH + ':' + MM;
+  const sameDay = t.getFullYear()===now.getFullYear() && t.getMonth()===now.getMonth() && t.getDate()===now.getDate();
+  if (sameDay) return time;
+  const yesterday = new Date(now); yesterday.setDate(now.getDate()-1);
+  const isYesterday = t.getFullYear()===yesterday.getFullYear() && t.getMonth()===yesterday.getMonth() && t.getDate()===yesterday.getDate();
+  if (isYesterday) return '어제 ' + time;
+  const sameYear = t.getFullYear() === now.getFullYear();
+  if (sameYear) return (t.getMonth()+1) + '/' + t.getDate() + ' ' + time;
+  return t.getFullYear() + '/' + (t.getMonth()+1) + '/' + t.getDate() + ' ' + time;
+}
 let toastTimer;
 function showToast(msg){
   const el=document.getElementById('toast');
