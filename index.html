@@ -67,8 +67,8 @@
     .month-nav-inline span { font-size:12px !important; min-width:70px !important; }
     .nav-btn-mini { width:20px !important; height:20px !important; }
     .left-col > div[style*="margin-bottom:10px"] { margin-bottom:3px !important; }
-    /* 달력 셀 크기 - 5주도 화면에 들어가게 축소 */
-    .cal-cell { height:42px !important; min-height:42px !important; padding:2px !important; overflow:hidden; box-sizing:border-box; }
+    /* 달력 셀 크기 - 하루에 여러 일정 표시할 수 있게 세로 확장 */
+    .cal-cell { height:60px !important; min-height:60px !important; padding:2px !important; overflow:hidden; box-sizing:border-box; }
     .cal-grid { margin-bottom:8px !important; margin-top:0 !important; }
     .cal-head { padding:4px 4px !important; font-size:11px !important; }
     .cal-num { font-size:11px !important; }
@@ -1423,7 +1423,7 @@ function renderChatMessages(data){
     const ts=String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0');
     let bubbleContent;
     if(m.message.startsWith('data:image/')){
-      if(m.message.length > 500000) { bubbleContent = "[이미지 크기 초과]"; } else { const safeSrc = escHtml(m.message); bubbleContent = `<img src="${safeSrc}" alt="이미지" onclick="viewImg(this.src)" onerror="this.style.display='none';this.insertAdjacentHTML('afterend','[이미지 로드 실패]')">`; }
+      const safeSrc = escHtml(m.message); bubbleContent = `<img src="${safeSrc}" alt="이미지" onclick="viewImg(this.src)" onerror="this.style.display='none';this.insertAdjacentHTML('afterend','[이미지 로드 실패]')">`;
     } else {
       bubbleContent=escHtml(m.message);
     }
@@ -1459,8 +1459,19 @@ async function sendImage(input){
   const reader=new FileReader();
   reader.onload=async function(e){
     let dataUrl=e.target.result;
-    if(file.size>MAX){
-      dataUrl=await resizeImage(dataUrl,800);
+    // 항상 리사이즈 (최대 폭 1000px, 그래도 크면 800px)
+    try {
+      dataUrl = await resizeImage(dataUrl, 1000);
+      // 결과가 너무 크면 더 압축
+      if (dataUrl.length > 800000) {
+        dataUrl = await resizeImage(dataUrl, 800);
+      }
+      if (dataUrl.length > 800000) {
+        dataUrl = await resizeImage(dataUrl, 600);
+      }
+    } catch(err) {
+      showToast('이미지 처리 실패: ' + err.message);
+      input.value=''; return;
     }
     try{
       await apiReq('/chats','POST',{sender:currentUser,receiver:'__GROUP__',message:dataUrl,is_read:false});
@@ -1472,16 +1483,19 @@ async function sendImage(input){
 }
 
 function resizeImage(dataUrl,maxW){
-  return new Promise(resolve=>{
+  return new Promise((resolve, reject)=>{
     const img=new Image();
     img.onload=function(){
-      const scale=Math.min(1,maxW/img.width);
-      const canvas=document.createElement('canvas');
-      canvas.width=img.width*scale;
-      canvas.height=img.height*scale;
-      canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
-      resolve(canvas.toDataURL('image/jpeg',0.75));
+      try {
+        const scale=Math.min(1,maxW/img.width);
+        const canvas=document.createElement('canvas');
+        canvas.width=img.width*scale;
+        canvas.height=img.height*scale;
+        canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
+        resolve(canvas.toDataURL('image/jpeg',0.7));
+      } catch(e) { reject(e); }
     };
+    img.onerror = () => reject(new Error('이미지 로드 실패'));
     img.src=dataUrl;
   });
 }
@@ -1588,7 +1602,7 @@ function renderGroupChat(data){
     const ts=String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0');
     let bubbleContent;
     if(m.message.startsWith('data:image/')){
-      if(m.message.length > 500000) { bubbleContent = "[이미지 크기 초과]"; } else { const safeSrc = escHtml(m.message); bubbleContent = `<img src="${safeSrc}" alt="이미지" onclick="viewImg(this.src)" onerror="this.style.display='none';this.insertAdjacentHTML('afterend','[이미지 로드 실패]')">`; }
+      const safeSrc = escHtml(m.message); bubbleContent = `<img src="${safeSrc}" alt="이미지" onclick="viewImg(this.src)" onerror="this.style.display='none';this.insertAdjacentHTML('afterend','[이미지 로드 실패]')">`;
     } else {
       bubbleContent=escHtml(m.message);
     }
@@ -1673,7 +1687,7 @@ function renderAllChatMessages(data){
     const ts=String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0');
     let bubbleContent;
     if(m.message.startsWith('data:image/')){
-      if(m.message.length > 500000) { bubbleContent = "[이미지 크기 초과]"; } else { const safeSrc = escHtml(m.message); bubbleContent = `<img src="${safeSrc}" alt="이미지" onclick="viewImg(this.src)" onerror="this.style.display='none';this.insertAdjacentHTML('afterend','[이미지 로드 실패]')">`; }
+      const safeSrc = escHtml(m.message); bubbleContent = `<img src="${safeSrc}" alt="이미지" onclick="viewImg(this.src)" onerror="this.style.display='none';this.insertAdjacentHTML('afterend','[이미지 로드 실패]')">`;
     } else {
       bubbleContent=escHtml(m.message);
     }
