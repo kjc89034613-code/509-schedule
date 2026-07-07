@@ -66,29 +66,34 @@
     /* 세부 일정 - 탭 전체 화면 사용, 자동 스크롤 */
     .table-wrap { max-height:calc(100vh - 200px) !important; margin-bottom:6px !important; overflow-y:auto !important; overflow-x:hidden !important; }
     /* 섹션 헤더 - 두 탭 모두 동일한 폰트/높이 */
-    .section-header { font-size:16px !important; padding:2px 0 6px 0 !important; margin-bottom:6px !important; min-height:32px !important; display:flex !important; align-items:center !important; justify-content:space-between !important; }
+    .section-header { font-size:16px !important; padding:2px 0 6px 0 !important; margin-bottom:6px !important; min-height:32px !important; display:flex !important; align-items:center !important; justify-content:space-between !important; flex-wrap:nowrap !important; gap:6px !important; }
     /* 월간 일정표 헤더는 위에 약간의 여백 */
     .section-header + * + .section-header,
     .table-wrap + .section-header,
     .section-header:not(:first-of-type) { margin-top:10px !important; }
-    .section-header > span { font-size:16px !important; font-weight:800 !important; display:flex !important; align-items:center !important; gap:7px !important; line-height:1.2 !important; }
+    .section-header > span { font-size:16px !important; font-weight:800 !important; display:flex !important; align-items:center !important; gap:7px !important; line-height:1.2 !important; white-space:nowrap !important; flex-shrink:0 !important; }
     #calCount { font-size:11px !important; font-weight:600 !important; }
+    /* 범례 - 모바일에서 작게 컴팩트 */
+    .cal-legend { gap:5px !important; flex-wrap:nowrap !important; }
+    .cal-legend-item { font-size:10px !important; font-weight:600 !important; gap:3px !important; white-space:nowrap !important; }
+    .cal-legend-dot { width:9px !important; height:9px !important; border-radius:2px !important; }
     /* 달력 네비게이션 - 월간 일정표 헤더와 완전 동일한 크기/높이 */
-    .section-header .month-nav-inline { background:transparent !important; border:none !important; padding:0 !important; gap:8px !important; display:inline-flex !important; align-items:center !important; }
-    .section-header .month-nav-inline span { font-size:16px !important; font-weight:800 !important; min-width:98px !important; color:#1e293b !important; line-height:1.2 !important; text-align:center !important; }
+    .section-header .month-nav-inline { background:transparent !important; border:none !important; padding:0 !important; gap:4px !important; display:inline-flex !important; align-items:center !important; flex-shrink:0 !important; }
+    .section-header .month-nav-inline span { font-size:15px !important; font-weight:800 !important; min-width:86px !important; color:#1e293b !important; line-height:1.2 !important; text-align:center !important; }
     .nav-btn-mini {
-      width:32px !important; height:32px !important;
-      font-size:20px !important; font-weight:900 !important;
+      width:28px !important; height:28px !important;
+      font-size:16px !important; font-weight:900 !important;
       color:#1e40af !important;
       background:linear-gradient(180deg,#fff 0%,#eff6ff 100%) !important;
       border:1.5px solid #93c5fd !important;
-      border-radius:8px !important;
+      border-radius:7px !important;
       display:inline-flex !important;
       align-items:center !important;
       justify-content:center !important;
       padding:0 !important;
       line-height:1 !important;
       box-shadow:0 1px 2px rgba(59,130,246,0.15) !important;
+      flex-shrink:0 !important;
     }
     .nav-btn-mini:hover { background:linear-gradient(180deg,#eff6ff 0%,#dbeafe 100%) !important; }
     .nav-btn-mini:active { transform:scale(0.95); }
@@ -741,7 +746,7 @@
           <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
           월간 일정표
         </span>
-        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap;">
           <div class="cal-legend">
             <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--gjc-cal)"></div>구자천</div>
             <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--gsm-cal)"></div>공석민</div>
