@@ -36,7 +36,7 @@
     /* 하단 탭바 표시 */
     .mobile-tabbar { display:flex !important; }
     /* 페이지 하단 여백 (탭바 공간 확보) */
-    .app { padding-bottom:74px !important; }
+    .app { padding-bottom:96px !important; }
     /* 탭별 컨텐츠 - 기본은 숨김, active만 표시 */
     .mobile-tab-content { display:none; }
     body.tab-schedule .tab-schedule { display:block; }
@@ -72,16 +72,17 @@
     .section-header:not(:first-of-type) { margin-top:10px !important; }
     .section-header span { font-size:15px !important; }
     #calCount { font-size:11px !important; font-weight:600 !important; }
-    /* 달력 네비게이션 컴팩트 */
-    .month-nav-inline span { font-size:12px !important; min-width:70px !important; }
-    .nav-btn-mini { width:20px !important; height:20px !important; }
+    /* 달력 네비게이션 - 월간 일정표 헤더와 같은 크기 */
+    .month-nav-inline span { font-size:15px !important; font-weight:800 !important; min-width:88px !important; color:#1e293b !important; }
+    .month-nav-inline { background:transparent !important; border:none !important; padding:0 !important; gap:6px !important; }
+    .nav-btn-mini { width:24px !important; height:24px !important; font-size:14px !important; }
     .left-col > div[style*="margin-bottom:10px"] { margin-bottom:3px !important; }
-    /* 달력 셀 크기 - 하루에 여러 일정 표시할 수 있게 세로 확장 */
-    .cal-cell { height:60px !important; min-height:60px !important; padding:2px !important; overflow:hidden; box-sizing:border-box; }
+    /* 달력 셀 크기 - 하루 3개 일정 기본 표시 */
+    .cal-cell { height:80px !important; min-height:80px !important; padding:3px !important; overflow:hidden; box-sizing:border-box; }
     .cal-grid { margin-bottom:8px !important; margin-top:0 !important; }
-    .cal-head { padding:4px 4px !important; font-size:11px !important; }
+    .cal-head { padding:5px 4px !important; font-size:11px !important; }
     .cal-num { font-size:11px !important; }
-    .cal-event { font-size:8px !important; padding:1px 2px !important; margin-bottom:1px !important; border-radius:2px !important; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; line-height:11px !important; }
+    .cal-event { font-size:9px !important; padding:1px 3px !important; margin-bottom:1px !important; border-radius:3px !important; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; line-height:13px !important; }
     /* 일정 추가/상세 팝업 - 화면에 맞게 축소 */
     .modal-overlay { padding:8px; align-items:flex-start; padding-top:8px; overflow-y:auto; }
     .modal { padding:20px !important; max-height:none; margin:0 auto; border-radius:16px !important; }
@@ -266,14 +267,14 @@
     bottom:0;
     left:0;
     right:0;
-    height:64px;
+    height:84px;
     background:#fff;
     border-top:1px solid #e5e7eb;
     box-shadow:0 -4px 12px rgba(0,0,0,0.08);
     z-index:70;
     align-items:stretch;
-    padding:4px 0 6px 0;
-    padding-bottom:calc(6px + env(safe-area-inset-bottom, 0px));
+    padding:5px 0 8px 0;
+    padding-bottom:calc(8px + env(safe-area-inset-bottom, 0px));
   }
   .mobile-tabbar .tab-btn {
     flex:1;
@@ -281,13 +282,13 @@
     flex-direction:column;
     align-items:center;
     justify-content:center;
-    gap:2px;
+    gap:4px;
     background:transparent;
     border:none;
     cursor:pointer;
-    padding:4px 2px;
+    padding:6px 3px;
     color:#94a3b8;
-    font-size:10px;
+    font-size:13px;
     font-weight:700;
     transition:all .15s;
     position:relative;
@@ -305,29 +306,29 @@
     top:0;
     left:50%;
     transform:translateX(-50%);
-    width:32px;
-    height:3px;
+    width:42px;
+    height:4px;
     background:linear-gradient(90deg,#3b82f6,#1e40af);
-    border-radius:0 0 4px 4px;
+    border-radius:0 0 5px 5px;
   }
   .mobile-tabbar .tab-badge {
     position:absolute;
-    top:2px;
+    top:4px;
     right:15%;
     background:#ef4444;
     color:#fff;
-    font-size:9px;
+    font-size:11px;
     font-weight:800;
-    padding:1px 5px;
-    border-radius:9px;
+    padding:1px 6px;
+    border-radius:10px;
     border:2px solid #fff;
-    min-width:16px;
+    min-width:20px;
     text-align:center;
     display:none;
   }
   .mobile-tabbar .tab-btn.has-badge .tab-badge { display:block; }
   /* 채팅 탭 - 채팅 컨테이너 위치 */
-  body.tab-chat .mobile-chat-overlay { display:flex !important; position:fixed; inset:0; bottom:64px; height:auto; }
+  body.tab-chat .mobile-chat-overlay { display:flex !important; position:fixed; inset:0; bottom:84px; height:auto; }
   body.tab-chat .mobile-tab-content { display:none !important; }
   .chat-panel { background:var(--surface); border:1px solid var(--border); border-radius:12px; display:flex; flex-direction:column; height:100%; min-height:600px; max-height:calc(100vh - 40px); box-shadow:var(--shadow-lg); overflow:hidden; margin-bottom:20px; position:sticky; top:16px; }
   /* 당구공 아바타 */
@@ -631,7 +632,7 @@
 
       <!-- ▼ 탭 컨텐츠 1: 세부 일정 -->
       <div class="mobile-tab-content tab-schedule">
-      <div class="section-header" style="justify-content:space-between;">
+      <div class="section-header" style="justify-content:space-between;margin-top:12px;">
         <span style="display:flex;align-items:center;gap:7px;">
           <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
           세부 일정 내용
@@ -670,16 +671,18 @@
 
       <!-- ▼ 탭 컨텐츠 2: 달력 (일정 추가) -->
       <div class="mobile-tab-content tab-calendar">
-      <div class="section-header" style="margin-top:12px;">
-        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-        월간 일정표
-      </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:8px;">
+      <div class="section-header" style="justify-content:space-between;margin-top:12px;">
+        <span style="display:flex;align-items:center;gap:7px;">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+          월간 일정표
+        </span>
         <div class="month-nav-inline">
           <button class="nav-btn-mini" onclick="changeMonth(-1)">&#8249;</button>
           <span id="monthLabel"></span>
           <button class="nav-btn-mini" onclick="changeMonth(1)">&#8250;</button>
         </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-bottom:6px;">
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
           <div style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2)"><div style="width:12px;height:12px;border-radius:3px;background:var(--gjc-cal)"></div> 구자천</div>
           <div style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2)"><div style="width:12px;height:12px;border-radius:3px;background:var(--gsm-cal)"></div> 공석민</div>
@@ -758,16 +761,16 @@
 <!-- 모바일 하단 탭 바 -->
 <nav class="mobile-tabbar" id="mobileTabbar">
   <button class="tab-btn active" data-tab="schedule" onclick="setMobileTab('schedule')">
-    <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-    <span>일정</span>
+    <svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+    <span>세부 일정</span>
   </button>
   <button class="tab-btn" data-tab="calendar" onclick="setMobileTab('calendar')">
-    <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M12 14v4M10 16h4" stroke-linecap="round"/></svg>
-    <span>일정추가</span>
+    <svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M12 14v4M10 16h4" stroke-linecap="round"/></svg>
+    <span>일정 등록</span>
   </button>
   <button class="tab-btn" data-tab="chat" onclick="setMobileTab('chat')">
-    <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-    <span>커뮤니케이션</span>
+    <svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+    <span>의사소통</span>
     <span class="tab-badge" id="tabBadge">0</span>
   </button>
 </nav>
