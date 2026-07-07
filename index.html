@@ -74,9 +74,24 @@
     .section-header > span { font-size:16px !important; font-weight:800 !important; display:flex !important; align-items:center !important; gap:7px !important; line-height:1.2 !important; }
     #calCount { font-size:11px !important; font-weight:600 !important; }
     /* 달력 네비게이션 - 월간 일정표 헤더와 완전 동일한 크기/높이 */
-    .section-header .month-nav-inline { background:transparent !important; border:none !important; padding:0 !important; gap:6px !important; display:inline-flex !important; align-items:center !important; }
-    .section-header .month-nav-inline span { font-size:16px !important; font-weight:800 !important; min-width:92px !important; color:#1e293b !important; line-height:1.2 !important; text-align:center !important; }
-    .nav-btn-mini { width:26px !important; height:26px !important; font-size:14px !important; }
+    .section-header .month-nav-inline { background:transparent !important; border:none !important; padding:0 !important; gap:8px !important; display:inline-flex !important; align-items:center !important; }
+    .section-header .month-nav-inline span { font-size:16px !important; font-weight:800 !important; min-width:98px !important; color:#1e293b !important; line-height:1.2 !important; text-align:center !important; }
+    .nav-btn-mini {
+      width:32px !important; height:32px !important;
+      font-size:20px !important; font-weight:900 !important;
+      color:#1e40af !important;
+      background:linear-gradient(180deg,#fff 0%,#eff6ff 100%) !important;
+      border:1.5px solid #93c5fd !important;
+      border-radius:8px !important;
+      display:inline-flex !important;
+      align-items:center !important;
+      justify-content:center !important;
+      padding:0 !important;
+      line-height:1 !important;
+      box-shadow:0 1px 2px rgba(59,130,246,0.15) !important;
+    }
+    .nav-btn-mini:hover { background:linear-gradient(180deg,#eff6ff 0%,#dbeafe 100%) !important; }
+    .nav-btn-mini:active { transform:scale(0.95); }
     .left-col > div[style*="margin-bottom:10px"] { margin-bottom:3px !important; }
     /* 달력 셀 크기 - 하루 3개 일정 기본 표시 */
     .cal-cell { height:80px !important; min-height:80px !important; padding:3px !important; overflow:hidden; box-sizing:border-box; }
@@ -366,7 +381,7 @@
   .msg.theirs { align-self:flex-start; align-items:flex-start; }
   .msg.mine .msg-row { flex-direction:row-reverse; }
 
-  .chat-panel-header { padding:14px 18px; border-bottom:1px solid rgba(255,255,255,0.15); background:linear-gradient(135deg,#1e40af 0%,#1e3a8a 50%,#312e81 100%); border-radius:12px 12px 0 0; box-shadow:inset 0 1px 0 rgba(255,255,255,0.15); min-height:56px; display:flex; align-items:center; }
+  .chat-panel-header { padding:14px 18px; border-bottom:1px solid rgba(255,255,255,0.15); background:linear-gradient(135deg,#1e40af 0%,#1e3a8a 50%,#312e81 100%); border-radius:12px 12px 0 0; box-shadow:inset 0 1px 0 rgba(255,255,255,0.15), 0 2px 8px rgba(30,58,138,0.15); min-height:56px; display:flex; align-items:center; }
   .chat-panel-header h2 { font-size:14px; font-weight:800; margin-bottom:0; color:#fff; text-shadow:0 1px 1px rgba(0,0,0,0.2); }
   /* 단톡방 타이틀 */
   .room-title-row { padding-bottom:0; margin-bottom:0; width:100%; }
@@ -389,12 +404,12 @@
   .chat-all-btn { padding:6px 15px; border-radius:20px; border:1px solid var(--border); cursor:pointer; font-size:12px; font-weight:800; background:linear-gradient(180deg,#fff 0%,#f3f4f6 100%); color:var(--text); transition:all .15s; box-shadow:var(--shadow-sm), inset 0 1px 0 #fff; }
   .chat-all-btn:hover { transform:translateY(-1px); box-shadow:var(--shadow-md); }
   .chat-all-btn.active-all { background:linear-gradient(180deg,#22c55e 0%,#15803d 100%); color:#fff; border-color:#15803d; text-shadow:0 1px 1px rgba(0,0,0,0.15); }
-  .chat-messages { flex:1; overflow-y:auto; padding:12px; display:flex; flex-direction:column; gap:8px; background:linear-gradient(180deg,#4b5563 0%,#374151 100%); }
-  .msg-sender { font-size:11px; color:#e5e7eb; font-weight:600; }
-  .msg-bubble { padding:10px 14px; border-radius:14px; font-size:14px; line-height:1.5; word-break:break-word; box-shadow:var(--shadow-sm); }
-  .msg.mine .msg-bubble { border-bottom-right-radius:4px; }
-  .msg.theirs .msg-bubble { border-bottom-left-radius:4px; }
-  .owner-bubble { background:linear-gradient(180deg,#fde047 0%,#facc15 100%); color:#1f2937; font-weight:600; }
+  .chat-messages { flex:1; overflow-y:auto; padding:16px 14px; display:flex; flex-direction:column; gap:10px; background:linear-gradient(180deg,#f1f5fb 0%,#e8eef8 100%); }
+  .msg-sender { font-size:11px; color:#64748b; font-weight:700; }
+  .msg-bubble { padding:11px 15px; border-radius:16px; font-size:14px; line-height:1.5; word-break:break-word; box-shadow:0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04); border:1px solid rgba(0,0,0,0.04); }
+  .msg.mine .msg-bubble { border-bottom-right-radius:6px; }
+  .msg.theirs .msg-bubble { border-bottom-left-radius:6px; }
+  .owner-bubble { background:linear-gradient(180deg,#fde68a 0%,#fbbf24 100%); color:#78350f; font-weight:600; border-color:rgba(180,120,20,0.15); }
   .other-bubble { background:#ffffff; color:#1f2937; }
   /* 이미지가 들어간 말풍선 - 배경/패딩 최소화 */
   .msg-bubble.has-image { padding:2px !important; background:transparent !important; box-shadow:none !important; }
@@ -420,28 +435,28 @@
     .msg.selected .msg-bubble { outline:2px solid rgba(59,130,246,0.5); outline-offset:2px; }
   }
   .msg-bubble img { max-width:200px; max-height:200px; border-radius:8px; display:block; cursor:pointer; }
-  .msg-time { font-size:11px; color:#d1d5db; }
-  .chat-input-area { padding:12px; border-top:1px solid #1f2937; display:flex; gap:10px; align-items:center; background:#1f1f1f; border-radius:0 0 12px 12px; }
-  .chat-input-area textarea { flex:1; padding:9px 15px; border:none; border-radius:24px; background:#2d2d2d; color:#fff; font-size:14px; resize:none; outline:none; height:42px; line-height:1.6; font-family:inherit; font-weight:600; }
-  .chat-input-area textarea::placeholder { color:#9ca3af; font-weight:500; }
-  .chat-input-area textarea:focus { background:#3a3a3a; }
+  .msg-time { font-size:11px; color:#64748b; font-weight:500; }
+  .chat-input-area { padding:12px 14px; border-top:1px solid #e5e7eb; display:flex; gap:10px; align-items:center; background:#ffffff; border-radius:0 0 12px 12px; box-shadow:0 -2px 8px rgba(0,0,0,0.03); }
+  .chat-input-area textarea { flex:1; padding:10px 16px; border:1.5px solid #e2e8f0; border-radius:24px; background:#f8fafc; color:#1f2937; font-size:14px; resize:none; outline:none; height:42px; line-height:1.6; font-family:inherit; font-weight:500; transition:all .15s; }
+  .chat-input-area textarea::placeholder { color:#94a3b8; font-weight:500; }
+  .chat-input-area textarea:focus { background:#fff; border-color:#3b82f6; box-shadow:0 0 0 3px rgba(59,130,246,0.12); }
 
-  /* + 버튼 - 카톡 스타일 (어두운 회색 원형) */
+  /* + 버튼 - 밝은 세련된 스타일 */
   .plus-menu-wrap { position:relative; flex-shrink:0; }
-  .plus-btn { width:40px; height:40px; border-radius:50%; background:#3a3a3a; color:#fff; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .15s; padding:0; }
-  .plus-btn:hover { background:#4a4a4a; }
-  .plus-btn.open { background:#3b82f6; color:#fff; transform:rotate(45deg); }
+  .plus-btn { width:40px; height:40px; border-radius:50%; background:linear-gradient(180deg,#f1f5f9 0%,#e2e8f0 100%); color:#475569; border:1.5px solid #cbd5e1; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .15s; padding:0; box-shadow:0 1px 2px rgba(0,0,0,0.05); }
+  .plus-btn:hover { background:linear-gradient(180deg,#e2e8f0 0%,#cbd5e1 100%); color:#1e293b; }
+  .plus-btn.open { background:linear-gradient(135deg,#3b82f6 0%,#1e40af 100%); color:#fff; border-color:#1e40af; transform:rotate(45deg); }
   .plus-btn svg { display:block; }
-  .plus-menu { position:absolute; bottom:calc(100% + 8px); left:0; background:#2d2d2d; border:1px solid #3a3a3a; border-radius:12px; box-shadow:0 8px 20px rgba(0,0,0,0.4); padding:6px; display:none; z-index:60; min-width:140px; }
+  .plus-menu { position:absolute; bottom:calc(100% + 8px); left:0; background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,0.12), 0 4px 10px rgba(0,0,0,0.06); padding:6px; display:none; z-index:60; min-width:150px; }
   .plus-menu.open { display:block; animation:popIn 0.15s ease-out; }
   @keyframes popIn { from { opacity:0; transform:translateY(6px) scale(0.95); } to { opacity:1; transform:translateY(0) scale(1); } }
-  .plus-menu-item { display:flex; align-items:center; gap:10px; width:100%; padding:9px 12px; border:none; background:transparent; color:#fff; font-size:13px; font-weight:600; cursor:pointer; border-radius:8px; text-align:left; transition:background .12s; }
-  .plus-menu-item:hover { background:#3a3a3a; }
-  .plus-menu-item svg { flex-shrink:0; color:#facc15; }
+  .plus-menu-item { display:flex; align-items:center; gap:10px; width:100%; padding:10px 12px; border:none; background:transparent; color:#1e293b; font-size:13px; font-weight:600; cursor:pointer; border-radius:8px; text-align:left; transition:background .12s; }
+  .plus-menu-item:hover { background:#f1f5f9; }
+  .plus-menu-item svg { flex-shrink:0; color:#3b82f6; }
 
-  /* 카카오 스타일 전송 버튼 - 노란 원형 */
-  .kakao-send-btn { width:40px; height:40px; border-radius:50%; background:#facc15; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all .15s; padding:0; box-shadow:0 2px 6px rgba(250,204,21,0.35); }
-  .kakao-send-btn:hover { background:#eab308; transform:scale(1.05); }
+  /* 전송 버튼 - 파란 그라데이션 원형 */
+  .kakao-send-btn { width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg,#3b82f6 0%,#1e40af 100%); border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all .15s; padding:0; box-shadow:0 3px 8px rgba(30,64,175,0.35); color:#fff; }
+  .kakao-send-btn:hover { background:linear-gradient(135deg,#2563eb 0%,#1e3a8a 100%); transform:scale(1.05); }
   .kakao-send-btn:active { transform:scale(0.95); }
   .kakao-send-btn svg { display:block; }
   .unread-badge { display:inline-block; background:#ef4444; color:#fff; border-radius:10px; font-size:10px; font-weight:700; padding:1px 5px; margin-left:2px; line-height:14px; box-shadow:var(--shadow-sm); }
@@ -638,7 +653,11 @@
           <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
           세부 일정 내용
         </span>
-        <span id="calCount" style="font-size:12px;font-weight:600;color:var(--text2);letter-spacing:0;text-transform:none;">이번 달 0건</span>
+        <div class="month-nav-inline">
+          <button class="nav-btn-mini" onclick="changeMonth(-1)">&#8249;</button>
+          <span id="monthLabelSchedule"></span>
+          <button class="nav-btn-mini" onclick="changeMonth(1)">&#8250;</button>
+        </div>
       </div>
       <div class="table-wrap">
         <table>
@@ -738,7 +757,7 @@
           </div>
           <textarea id="chatInput" placeholder="메시지 입력..." onkeydown="handleKey(event)"></textarea>
           <button class="kakao-send-btn" onclick="sendMessage()" title="전송">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="#000" xmlns="http://www.w3.org/2000/svg">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff" xmlns="http://www.w3.org/2000/svg">
               <path d="M6 4.5v15c0 .8.9 1.3 1.6.9l12.4-7.5c.6-.4.6-1.3 0-1.7L7.6 3.6c-.7-.5-1.6 0-1.6.9z"/>
             </svg>
           </button>
@@ -1087,8 +1106,22 @@ async function loadSchedules() {
   if (!checkConfig()) { renderTable([]); renderCalendar([]); return; }
   try {
     const data = await apiReq('/schedules?select=*&order=date.asc,time_start.asc');
-    allSchedules = data; renderTable(data); renderCalendar(data);
+    allSchedules = data;
+    renderTable(filterByCurrentMonth(data));
+    renderCalendar(data);
   } catch(e) { showToast('일정 로드 실패: '+e.message); renderTable([]); }
+}
+
+// 현재 표시 중인 월과 겹치는 일정만 반환
+function filterByCurrentMonth(data) {
+  const monthStart = currentYear+'-'+String(currentMonth+1).padStart(2,'0')+'-01';
+  const lastDay = new Date(currentYear,currentMonth+1,0).getDate();
+  const monthEnd = currentYear+'-'+String(currentMonth+1).padStart(2,'0')+'-'+String(lastDay).padStart(2,'0');
+  return data.filter(s => {
+    if (!s.date) return false;
+    const sEnd = s.date_end || s.date;
+    return s.date <= monthEnd && sEnd >= monthStart;
+  });
 }
 
 function renderTable(data) {
@@ -1155,6 +1188,8 @@ function renderTable(data) {
 
 function renderCalendar(data) {
   document.getElementById('monthLabel').textContent = currentYear+'년 '+(currentMonth+1)+'월';
+  const scheduleLbl = document.getElementById('monthLabelSchedule');
+  if (scheduleLbl) scheduleLbl.textContent = currentYear+'년 '+(currentMonth+1)+'월';
   // 이번 달과 겹치는 일정 필터 (시작일~종료일 범위 고려)
   const monthStart = currentYear+'-'+String(currentMonth+1).padStart(2,'0')+'-01';
   const lastDay = new Date(currentYear,currentMonth+1,0).getDate();
@@ -1205,6 +1240,10 @@ function changeMonth(d) {
   if(currentMonth>11){currentMonth=0;currentYear++;}
   if(currentMonth<0){currentMonth=11;currentYear--;}
   renderCalendar(allSchedules);
+  renderTable(filterByCurrentMonth(allSchedules));
+  // 세부 일정 헤더의 월 라벨 동기화
+  const scheduleLbl = document.getElementById('monthLabelSchedule');
+  if (scheduleLbl) scheduleLbl.textContent = currentYear+'년 '+(currentMonth+1)+'월';
 }
 
 // ── 일정 CRUD ─────────────────────────────────────────────
