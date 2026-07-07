@@ -2194,57 +2194,78 @@ window.addEventListener('resize', () => {
 // ============ 모바일 스와이프 제스처 - 좌우로 탭 전환 ============
 (function setupSwipe() {
   const TABS = ['schedule','calendar','chat'];
-  const MIN_SWIPE_DIST = 60;   // 최소 이동 거리 (px)
-  const MAX_VERTICAL_DEV = 50; // 세로 이동 최대 허용 (px)
-  const EDGE_INSENSITIVE = 20; // 왼쪽 가장자리 뒤로가기 방지 영역
-  let sx = 0, sy = 0, tracking = false;
+  const MIN_SWIPE_DIST = 55;   // 최소 가로 이동 거리 (px)
+  const H_DOMINANCE = 1.4;     // 가로 이동이 세로보다 얼마나 커야 스와이프인지 (배수)
+  const EDGE_INSENSITIVE = 20; // 왼쪽/오른쪽 가장자리 뒤로가기 방지 영역
+  let sx = 0, sy = 0, lastX = 0, lastY = 0, tracking = false;
+  let swipeJustHappened = false;
 
   function currentTab() {
     if (document.body.classList.contains('tab-calendar')) return 'calendar';
     if (document.body.classList.contains('tab-chat')) return 'chat';
     return 'schedule';
   }
-  function isTargetOk(target) {
-    // 스크롤 가능한 요소나 스와이프 컨트롤이 있는 곳은 제외
-    if (!target) return true;
-    if (target.closest && (
-        target.closest('.chat-messages') ||
-        target.closest('.table-wrap') ||
-        target.closest('.modal-overlay') ||
-        target.closest('.plus-menu') ||
-        target.closest('.cal-cell') ||
-        target.closest('textarea') ||
-        target.closest('input') ||
-        target.closest('select') ||
-        target.closest('button')
-      )) return false;
-    return true;
+  function shouldIgnore(target) {
+    if (!target || !target.closest) return false;
+    // 실제로 사용자 입력을 받는 요소만 제외
+    if (target.closest('.modal-overlay:not(.hidden)')) return true;
+    if (target.closest('.plus-menu.open')) return true;
+    if (target.closest('.mobile-tabbar')) return true;
+    if (target.closest('textarea')) return true;
+    if (target.closest('input')) return true;
+    if (target.closest('select')) return true;
+    // 삭제 버튼 클릭 방해 방지
+    if (target.closest('.msg-del-btn')) return true;
+    return false;
   }
+
   document.addEventListener('touchstart', (e) => {
     if (window.innerWidth > 860) return;
     if (!e.touches || e.touches.length !== 1) return;
     const t = e.touches[0];
     if (t.clientX < EDGE_INSENSITIVE || t.clientX > window.innerWidth - EDGE_INSENSITIVE) return;
-    if (!isTargetOk(e.target)) return;
-    sx = t.clientX; sy = t.clientY; tracking = true;
+    if (shouldIgnore(e.target)) return;
+    sx = lastX = t.clientX;
+    sy = lastY = t.clientY;
+    tracking = true;
+  }, { passive:true });
+
+  document.addEventListener('touchmove', (e) => {
+    if (!tracking || !e.touches || !e.touches[0]) return;
+    lastX = e.touches[0].clientX;
+    lastY = e.touches[0].clientY;
   }, { passive:true });
 
   document.addEventListener('touchend', (e) => {
     if (!tracking) return;
     tracking = false;
-    if (!e.changedTouches || !e.changedTouches[0]) return;
-    const t = e.changedTouches[0];
-    const dx = t.clientX - sx;
-    const dy = t.clientY - sy;
-    if (Math.abs(dy) > MAX_VERTICAL_DEV) return; // 세로 스크롤로 판단
-    if (Math.abs(dx) < MIN_SWIPE_DIST) return;
+    const dx = lastX - sx;
+    const dy = lastY - sy;
+    const adx = Math.abs(dx);
+    const ady = Math.abs(dy);
+    // 세로 이동이 가로 이동과 비슷하거나 크면 → 스크롤로 판단, 스와이프 무시
+    if (adx < MIN_SWIPE_DIST) return;
+    if (adx < ady * H_DOMINANCE) return;
     const cur = TABS.indexOf(currentTab());
     if (cur < 0) return;
     let next;
     if (dx < 0 && cur < TABS.length - 1) next = TABS[cur+1]; // 왼쪽으로 밀기 → 다음 탭
     else if (dx > 0 && cur > 0) next = TABS[cur-1]; // 오른쪽으로 밀기 → 이전 탭
-    if (next) setMobileTab(next);
+    if (next) {
+      // 다음 click 이벤트 무시 (달력 셀 클릭 등 방지)
+      swipeJustHappened = true;
+      setTimeout(() => { swipeJustHappened = false; }, 350);
+      setMobileTab(next);
+    }
   }, { passive:true });
+
+  // 스와이프 직후의 click은 캡처 단계에서 차단
+  document.addEventListener('click', (e) => {
+    if (swipeJustHappened) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+  }, true);
 })();
 
 function buildTimeOptions() {
