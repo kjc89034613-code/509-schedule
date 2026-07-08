@@ -1146,11 +1146,165 @@ async function requestNotificationPermission() {
   }
 }
 
+// 미확인 알림 카운트 (탭 제목/파비콘 뱃지용)
+let unseenNotifCount = 0;
+const originalTitle = '직원 일정 공유';
+let originalFaviconHref = null;
+let alertAudio = null;
+
+// 알림음 준비 (짧은 삐 소리 - Base64 WAV)
+function playAlertSound() {
+  try {
+    if (!alertAudio) {
+      // 간단한 삐 소리 (200ms, 800Hz)
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, ctx.currentTime);
+      gain.gain.setValueAtTime(0.1, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.3);
+    }
+  } catch(e) { /* 오디오 재생 실패 무시 */ }
+}
+
+// 진동 (모바일)
+function triggerVibration() {
+  try {
+    if ('vibrate' in navigator) navigator.vibrate([200, 100, 200]);
+  } catch(e) {}
+}
+
+// 탭 제목에 뱃지 표시
+function updateTitleBadge() {
+  document.title = unseenNotifCount > 0 ? `(${unseenNotifCount}) ${originalTitle}` : originalTitle;
+}
+
+// 파비콘에 빨간 점 표시
+function updateFaviconBadge() {
+  try {
+    let link = document.querySelector('link[rel="icon"]') || document.querySelector('link[rel="shortcut icon"]');
+    if (!link) {
+      link = document.createElement('link');
+      link.rel = 'icon';
+      document.head.appendChild(link);
+    }
+    if (!originalFaviconHref) originalFaviconHref = link.href || '';
+
+    // 파비콘 생성 (canvas로 그리기)
+    const canvas = document.createElement('canvas');
+    canvas.width = 32; canvas.height = 32;
+    const ctx = canvas.getContext('2d');
+    // 배경 (파란 원)
+    ctx.fillStyle = '#1e40af';
+    ctx.beginPath(); ctx.arc(16, 16, 15, 0, Math.PI * 2); ctx.fill();
+    // 아이콘 (달력 느낌)
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 18px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('일', 16, 17);
+    // 새 알림 있으면 빨간 점
+    if (unseenNotifCount > 0) {
+      ctx.fillStyle = '#ef4444';
+      ctx.beginPath(); ctx.arc(24, 8, 7, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 10px sans-serif';
+      ctx.fillText(unseenNotifCount > 9 ? '9+' : String(unseenNotifCount), 24, 9);
+    }
+    link.href = canvas.toDataURL('image/png');
+  } catch(e) { /* 파비콘 업데이트 실패 무시 */ }
+}
+
+// 뱃지 초기화 (사용자가 앱으로 돌아왔을 때)
+function clearNotifBadges() {
+  unseenNotifCount = 0;
+  updateTitleBadge();
+  updateFaviconBadge();
+}
+
+// 페이지 활성화될 때 뱃지 리셋
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) clearNotifBadges();
+});
+window.addEventListener('focus', () => clearNotifBadges());
+
+// Service Worker 등록 (모바일 알림 성공률 향상)
+async function registerServiceWorker() {
+  if (!('serviceWorker' in navigator)) return;
+  try {
+    // 인라인 Service Worker (별도 파일 없이 등록)
+    const swCode = `
+      self.addEventListener('install', e => self.skipWaiting());
+      self.addEventListener('activate', e => self.clients.claim());
+      self.addEventListener('notificationclick', e => {
+        e.notification.close();
+        e.waitUntil(clients.matchAll({type:'window'}).then(list => {
+          for (const c of list) { if ('focus' in c) return c.focus(); }
+          if (clients.openWindow) return clients.openWindow('/');
+        }));
+      });
+    `;
+    const blob = new Blob([swCode], {type: 'application/javascript'});
+    const url = URL.createObjectURL(blob);
+    await navigator.serviceWorker.register(url).catch(err => {
+      // 일부 브라우저는 blob URL SW 등록을 막을 수 있음 - 무시
+      console.log('SW 등록 실패 (문제 없음):', err.message);
+    });
+  } catch(e) {}
+}
+
 // 알림 표시 (앱 활성 상태일 땐 스킵)
 function showBrowserNotification(title, body, tag) {
+  const isActive = !document.hidden && document.hasFocus();
+
+  // 앱 활성 시: 진동 + 소리 + 인앱 토스트만
+  if (isActive) {
+    triggerVibration();
+    playAlertSound();
+    showToast(`${title}: ${body}`.substring(0, 60));
+    return;
+  }
+
+  // 앱 비활성: 탭 뱃지 카운트 증가 + 파비콘 뱃지 + 시스템 알림 시도
+  unseenNotifCount++;
+  updateTitleBadge();
+  updateFaviconBadge();
+
+  // 시스템 알림 시도 (Service Worker 경유 우선)
   if (notifPermission !== 'granted') return;
-  // 앱이 현재 활성 상태(포커스+보이는 상태)면 알림 안 함
-  if (!document.hidden && document.hasFocus()) return;
+  try {
+    // Service Worker가 있으면 SW를 통해 표시 (모바일 성공률 높음)
+    if (navigator.serviceWorker && navigator.serviceWorker.ready) {
+      navigator.serviceWorker.ready.then(reg => {
+        reg.showNotification(title, {
+          body: body,
+          tag: tag || '',
+          icon: '',
+          badge: '',
+          silent: false,
+          requireInteraction: false,
+          vibrate: [200, 100, 200]
+        }).catch(() => {
+          // 실패 시 직접 알림 시도
+          fallbackNotification(title, body, tag);
+        });
+      }).catch(() => fallbackNotification(title, body, tag));
+    } else {
+      fallbackNotification(title, body, tag);
+    }
+  } catch(e) {
+    fallbackNotification(title, body, tag);
+  }
+}
+
+function fallbackNotification(title, body, tag) {
   try {
     const notif = new Notification(title, {
       body: body,
@@ -1162,11 +1316,8 @@ function showBrowserNotification(title, body, tag) {
       window.focus();
       notif.close();
     };
-    // 6초 후 자동 닫기
     setTimeout(() => { try{notif.close();}catch(_){}; }, 6000);
-  } catch(e) {
-    console.error('알림 표시 실패', e);
-  }
+  } catch(e) {}
 }
 
 // 새 일정 감지
@@ -2241,6 +2392,9 @@ function init(){
   // 첫 로드 완료 후 2초 뒤부터 알림 감지 활성화 (기존 데이터에 대해서는 알림 X)
   setTimeout(() => { notifsInitialized = true; }, 2000);
   updateNotifIcon();
+  // 파비콘 초기화 및 Service Worker 등록
+  updateFaviconBadge();
+  registerServiceWorker();
 }
 
 // ── 모바일 채팅 처리 ─────────────────────────────
