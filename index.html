@@ -45,7 +45,9 @@
     .table-wrap { max-height:280px; overflow-x:hidden; }
     table { min-width:0 !important; table-layout:fixed; width:100% !important; }
     /* 모바일에서만 특정 헤더 표시/숨김 */
-    .col-loc, .col-work, .col-manage { display:none !important; }
+    .col-date-end, .col-loc, .col-work, .col-manage { display:none !important; }
+    .col-date-web { display:none !important; }
+    .col-date-mobile { display:inline !important; }
     /* 모바일 컬럼 너비 지정 - 5개 컬럼 화면 꽉 채움 */
     .col-emp { width:16% !important; }
     .col-date { width:16% !important; }
@@ -236,6 +238,8 @@
   }
   .section-header svg { color:#2563eb; }
 
+  .col-date-mobile { display:none; }
+  .col-date-web { display:inline; }
   /* Table */
   .table-wrap { overflow:auto; margin-bottom:6px; border:1px solid var(--border); border-radius:12px; box-shadow:var(--shadow-md); background:#fff; max-height:170px; }
   table { width:100%; border-collapse:collapse; min-width:520px; }
@@ -775,7 +779,7 @@
           <thead>
             <tr>
               <th style="text-align:center" class="col-emp">구분</th>
-              <th style="text-align:center" class="col-date">시작일</th>
+              <th style="text-align:center" class="col-date"><span class="col-date-web">시작일</span><span class="col-date-mobile">일자</span></th>
               <th style="text-align:center" class="col-date-end">종료일</th>
               <th style="text-align:center" class="col-time">시간</th>
               <th style="text-align:center;white-space:nowrap;min-width:60px" class="col-loc">장소</th>
