@@ -1151,6 +1151,28 @@ function initFirebase() {
   }
 }
 
+// ===== 홈 화면 아이콘 배지(뱃지 숫자) 관련 =====
+function isBadgeSupported() {
+  return 'setAppBadge' in navigator;
+}
+function setAppBadgeCount(count) {
+  if (!isBadgeSupported()) return;
+  try {
+    if (count > 0) navigator.setAppBadge(count).catch(()=>{});
+    else navigator.clearAppBadge().catch(()=>{});
+  } catch(e) { console.warn('[Badge] 설정 실패:', e); }
+}
+function clearAppBadgeNow() {
+  if (!isBadgeSupported()) return;
+  try { navigator.clearAppBadge().catch(()=>{}); } catch(e) {}
+}
+// 앱이 다시 화면에 보이면(포커스) 배지는 지운다 - 사용자가 확인했다고 간주
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    clearAppBadgeNow();
+  }
+});
+
 // FCM 토큰 발급 및 Supabase에 저장
 async function registerFcmToken() {
   if (!fcmMessaging) { console.warn('FCM 미초기화'); return; }
@@ -2192,6 +2214,7 @@ function viewImg(src){
 async function markRead(){
   if(!currentUser||!currentPeer)return;
   try{await apiReq('/chats?sender=eq.'+encodeURIComponent(currentPeer)+'&receiver=eq.'+encodeURIComponent(currentUser)+'&is_read=eq.false','PATCH',{is_read:true});}catch(e){}
+  clearAppBadgeNow();
 }
 function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}}
 
@@ -2264,6 +2287,7 @@ function updateFabBadge(data) {
     if (fab) fab.classList.add('hidden-badge');
     if (headerBtn) headerBtn.classList.add('hidden-badge');
     if (tabChatBtn) tabChatBtn.classList.remove('has-badge');
+    clearAppBadgeNow();
     return;
   }
   // 웹 모드 - 이미 채팅창 보이는 상태
@@ -2272,6 +2296,7 @@ function updateFabBadge(data) {
     if (fab) fab.classList.add('hidden-badge');
     if (headerBtn) headerBtn.classList.add('hidden-badge');
     if (tabChatBtn) tabChatBtn.classList.remove('has-badge');
+    clearAppBadgeNow();
     return;
   }
   // 팝업이 닫힌 상태에서 새 메시지가 있는지
@@ -2285,10 +2310,13 @@ function updateFabBadge(data) {
     if (fab) fab.classList.remove('hidden-badge');
     if (headerBtn) headerBtn.classList.remove('hidden-badge');
     if (tabChatBtn) tabChatBtn.classList.add('has-badge');
+    // 화면이 안 보이는 상태(다른 앱 사용 중 등)일 때만 홈 화면 아이콘 배지 표시
+    if (document.visibilityState !== 'visible') setAppBadgeCount(unread);
   } else {
     if (fab) fab.classList.add('hidden-badge');
     if (headerBtn) headerBtn.classList.add('hidden-badge');
     if (tabChatBtn) tabChatBtn.classList.remove('has-badge');
+    clearAppBadgeNow();
   }
 }
 
@@ -2480,6 +2508,7 @@ function showToast(msg){
 
 function init(){
   checkConfig();
+  clearAppBadgeNow();
   renderCalendar([]);
   loadSchedules();
   buildPeerButtons();
