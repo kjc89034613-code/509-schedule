@@ -1170,12 +1170,6 @@ function clearAppBadgeNow() {
   if (!isBadgeSupported()) return;
   try { navigator.clearAppBadge().catch(()=>{}); } catch(e) {}
 }
-// 앱이 다시 화면에 보이면(포커스) 배지는 지운다 - 사용자가 확인했다고 간주
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') {
-    clearAppBadgeNow();
-  }
-});
 
 // FCM 토큰 발급 및 Supabase에 저장
 async function registerFcmToken() {
@@ -1348,6 +1342,7 @@ function clearNotifBadges() {
   unseenNotifCount = 0;
   updateTitleBadge();
   updateFaviconBadge();
+  clearAppBadgeNow();
 }
 
 // 페이지 활성화될 때 뱃지 리셋
@@ -1397,6 +1392,7 @@ function showBrowserNotification(title, body, tag) {
   unseenNotifCount++;
   updateTitleBadge();
   updateFaviconBadge();
+  setAppBadgeCount(unseenNotifCount);
 
   // 시스템 알림 시도 (Service Worker 경유 우선)
   if (notifPermission !== 'granted') return;
@@ -2514,12 +2510,13 @@ function init(){
   checkConfig();
   clearAppBadgeNow();
   renderCalendar([]);
-  loadSchedules();
+  Promise.all([loadSchedules(), loadGroupChat()]).finally(() => {
+    // 최초 데이터 로드가 끝난 뒤에만 알림 감지 활성화 (기존 데이터에 대해서는 알림 X)
+    setTimeout(() => { notifsInitialized = true; }, 500);
+  });
   buildPeerButtons();
   startChatPoll();
   setupMobileChat();
-  // 첫 로드 완료 후 2초 뒤부터 알림 감지 활성화 (기존 데이터에 대해서는 알림 X)
-  setTimeout(() => { notifsInitialized = true; }, 2000);
   updateNotifIcon();
   // 파비콘 초기화 및 Service Worker 등록
   updateFaviconBadge();
