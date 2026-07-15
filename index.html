@@ -7,6 +7,9 @@
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>직원 일정 공유</title>
+<!-- Firebase SDK for FCM 알림 -->
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-messaging-compat.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -1110,6 +1113,96 @@ let knownChatIds = new Set();
 let notifsInitialized = false; // 첫 로드 완료 후에만 알림
 let notifPermission = ('Notification' in window) ? Notification.permission : 'unsupported';
 
+// ── Firebase FCM 설정 ─────────────────────────────────────
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyByck4ER9ZTwZep7_sQg4p1L32RBO8oIyQ",
+  authDomain: "schedule-fd7f0.firebaseapp.com",
+  projectId: "schedule-fd7f0",
+  storageBucket: "schedule-fd7f0.firebasestorage.app",
+  messagingSenderId: "595202670396",
+  appId: "1:595202670396:web:0e02e940de2a4b50fb6839"
+};
+const VAPID_KEY = "BEwLJZ2xuPOElR7fmzi4fbCMsK12lyD__7rfCl_6p-FXLxDe1-kiLt33JDVUgflVH9mrKtCFzk9ANU4OHpfQEI0";
+let fcmMessaging = null;
+let fcmToken = null;
+
+// Firebase 초기화
+function initFirebase() {
+  try {
+    if (typeof firebase === 'undefined') {
+      console.warn('Firebase SDK를 불러오지 못했습니다');
+      return;
+    }
+    firebase.initializeApp(FIREBASE_CONFIG);
+    fcmMessaging = firebase.messaging();
+
+    // 포그라운드 메시지 처리 (앱을 보고 있을 때 알림 도착)
+    fcmMessaging.onMessage((payload) => {
+      console.log('[FCM] 포그라운드 메시지:', payload);
+      const title = payload.notification?.title || payload.data?.title || '새 알림';
+      const body  = payload.notification?.body  || payload.data?.body  || '';
+      // 진동 + 소리 + 토스트
+      try { if ('vibrate' in navigator) navigator.vibrate([200,100,200]); } catch(e){}
+      showToast(`${title}: ${body}`.substring(0, 60));
+    });
+    console.log('[FCM] Firebase 초기화 완료');
+  } catch(e) {
+    console.error('[FCM] 초기화 실패:', e);
+  }
+}
+
+// FCM 토큰 발급 및 Supabase에 저장
+async function registerFcmToken() {
+  if (!fcmMessaging) { console.warn('FCM 미초기화'); return; }
+  if (!currentUser) { console.warn('사용자 미선택'); return; }
+  if (Notification.permission !== 'granted') { console.warn('알림 권한 없음'); return; }
+
+  try {
+    // Service Worker 등록 대기
+    const swReg = await navigator.serviceWorker.ready;
+    // 토큰 발급
+    const token = await fcmMessaging.getToken({
+      vapidKey: VAPID_KEY,
+      serviceWorkerRegistration: swReg
+    });
+    if (!token) {
+      console.warn('[FCM] 토큰 발급 실패');
+      return;
+    }
+    fcmToken = token;
+    console.log('[FCM] 토큰 발급 성공 (앞 30자):', token.substring(0, 30) + '...');
+
+    // Supabase에 저장 (같은 토큰 있으면 갱신)
+    const deviceInfo = navigator.userAgent.substring(0, 200);
+    await apiReq('/fcm_tokens?on_conflict=token', 'POST', {
+      user_name: currentUser,
+      token: token,
+      device_info: deviceInfo,
+      updated_at: new Date().toISOString()
+    }, { 'Prefer': 'resolution=merge-duplicates' });
+    console.log('[FCM] 토큰 Supabase 저장 완료');
+    showToast('푸시 알림이 활성화되었습니다 🔔');
+  } catch(e) {
+    console.error('[FCM] 토큰 등록 실패:', e);
+  }
+}
+
+// FCM Service Worker 등록
+async function registerFcmServiceWorker() {
+  if (!('serviceWorker' in navigator)) return null;
+  try {
+    // 절대 URL로 등록 (GitHub Pages 서브 경로 대응)
+    const swPath = './firebase-messaging-sw.js';
+    const reg = await navigator.serviceWorker.register(swPath);
+    console.log('[SW] Firebase Messaging SW 등록 완료:', reg.scope);
+    return reg;
+  } catch(e) {
+    console.error('[SW] 등록 실패:', e);
+    return null;
+  }
+}
+
+
 // 알림 권한 요청
 async function requestNotificationPermission() {
   if (!('Notification' in window)) {
@@ -1134,6 +1227,8 @@ async function requestNotificationPermission() {
     updateNotifIcon();
     if (result === 'granted') {
       showToast('알림이 활성화되었습니다 🔔');
+      // FCM 토큰 등록 (백그라운드 알림용)
+      await registerFcmToken();
       new Notification('직원 일정 공유', {
         body: '새 일정과 대화 알림이 활성화되었습니다',
         tag: 'welcome'
@@ -1476,7 +1571,7 @@ async function selectChatTarget(name) {
 }
 
 // ── API ──────────────────────────────────────────────────
-async function apiReq(path, method='GET', body=null) {
+async function apiReq(path, method='GET', body=null, extraHeaders=null) {
   const opts = {
     method,
     headers: {
@@ -1486,6 +1581,7 @@ async function apiReq(path, method='GET', body=null) {
       'Prefer': method==='POST' ? 'return=representation' : '',
     }
   };
+  if (extraHeaders) Object.assign(opts.headers, extraHeaders);
   if (body) opts.body = JSON.stringify(body);
   const res = await fetch(`${SUPABASE_URL}/rest/v1${path}`, opts);
   if (!res.ok) throw new Error(await res.text());
@@ -2395,6 +2491,14 @@ function init(){
   // 파비콘 초기화 및 Service Worker 등록
   updateFaviconBadge();
   registerServiceWorker();
+  // Firebase FCM 초기화 및 SW 등록
+  initFirebase();
+  registerFcmServiceWorker().then(() => {
+    // 이미 권한이 허용된 상태면 자동으로 토큰 등록/갱신
+    if (Notification.permission === 'granted' && currentUser) {
+      setTimeout(() => registerFcmToken(), 1500);
+    }
+  });
 }
 
 // ── 모바일 채팅 처리 ─────────────────────────────

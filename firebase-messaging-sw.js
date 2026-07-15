@@ -26,8 +26,6 @@ messaging.onBackgroundMessage((payload) => {
 
   const options = {
     body: body,
-    icon: 'https://kjc89034613-code.github.io/509-schedule/icon.png',
-    badge: 'https://kjc89034613-code.github.io/509-schedule/icon.png',
     tag: payload.data?.tag || 'default',
     vibrate: [200, 100, 200],
     requireInteraction: false,
