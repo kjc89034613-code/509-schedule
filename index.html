@@ -1448,6 +1448,8 @@ function detectNewSchedules(schedules) {
       knownScheduleIds.add(s.id);
       // 본인이 만든 것은 스킵
       if (s.employee === currentUser) return;
+      // FCM 서버 푸시가 이미 등록되어 있으면 로컬 알림은 생략 (중복 알림 방지)
+      if (fcmToken) return;
       const bodyParts = [];
       if (s.date) bodyParts.push(s.date);
       if (s.site_name) bodyParts.push(s.site_name);
@@ -1468,6 +1470,8 @@ function detectNewChats(chats) {
     if (!knownChatIds.has(c.id)) {
       knownChatIds.add(c.id);
       if (c.sender === currentUser) return;
+      // FCM 서버 푸시가 이미 등록되어 있으면 로컬 알림은 생략 (중복 알림 방지)
+      if (fcmToken) return;
       let body = c.message || '';
       if (body.startsWith('data:image/')) body = '📷 이미지';
       if (body.length > 80) body = body.substring(0, 80) + '...';
