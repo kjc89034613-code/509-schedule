@@ -537,20 +537,18 @@
     border:1.5px solid rgba(255,255,255,0.25); border-radius:24px;
     background:rgba(255,255,255,0.95); color:#1f2937;
     font-size:15px; resize:none; outline:none;
-    min-height:44px; max-height:92px;
-    line-height:1.6; font-family:inherit; font-weight:500;
-    transition:border-color .15s, box-shadow .15s, border-radius .15s;
-    overflow-y:hidden;
+    height:44px; line-height:1.6; font-family:inherit; font-weight:500;
+    transition:border-color .15s, box-shadow .15s;
+    overflow-y:auto;
     box-sizing:border-box;
     -webkit-appearance:none;
     -moz-appearance:none;
     appearance:none;
   }
-  /* 두 줄 이상이 되면 줄간격/모서리를 살짝 컴팩트하게 */
+  /* 두 줄 이상이 되면 줄간격을 살짝 좁혀서 보기 좋게 (박스 크기는 그대로) */
   .chat-input-area textarea.multiline {
-    line-height:1.32;
+    line-height:1.28;
     padding-top:9px; padding-bottom:9px;
-    border-radius:18px;
   }
   .chat-input-area textarea::placeholder { color:#94a3b8; font-weight:500; }
   .chat-input-area textarea:focus { background:#fff; border-color:#fbbf24; box-shadow:0 0 0 3px rgba(251,191,36,0.25); }
@@ -2170,14 +2168,10 @@ async function sendMessage(){
     await loadGroupChat();
   }catch(e){showToast('전송 실패: '+e.message);input.value=msg;autoResizeChatInput(input);}
 }
-// 채팅 입력창 자동 높이 조절: 한 줄이면 중앙 정렬, 두 줄 이상이면 줄간격을 줄여 컴팩트하게
+// 채팅 입력창: 박스 크기는 고정, 두 줄 이상이면 줄간격만 좁혀서 보기 좋게
 function autoResizeChatInput(el) {
-  el.style.height = 'auto';
   const singleLine = el.scrollHeight <= 46; // 대략 1줄 높이 기준
   el.classList.toggle('multiline', !singleLine);
-  const max = 92;
-  el.style.height = Math.min(el.scrollHeight, max) + 'px';
-  el.style.overflowY = el.scrollHeight > max ? 'auto' : 'hidden';
 }
 async function sendImage(input){
   if(!currentUser){showToast('먼저 방장선택으로 본인을 선택하세요');input.value='';return;}
