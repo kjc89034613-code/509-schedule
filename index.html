@@ -160,10 +160,10 @@
   .chat-fab.hidden-badge .fab-badge { display:none; }
 
   /* 모바일 채팅 팝업 오버레이 */
-  .mobile-chat-overlay { display:none; position:fixed; inset:0; background:#1e3a8a; z-index:90; align-items:stretch; justify-content:center; animation:fadeIn .2s ease-out; padding:0; margin:0; height:100vh; height:100dvh; }
+  .mobile-chat-overlay { display:none; position:fixed; inset:0; background:#1e3a8a; z-index:90; align-items:stretch; justify-content:center; animation:fadeIn .2s ease-out; padding:0; margin:0; }
   .mobile-chat-overlay.open { display:flex; }
   @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
-  .mobile-chat-container { width:100vw !important; max-width:none; height:100vh; height:100dvh; background:#1e3a8a; border-radius:0; display:flex; flex-direction:column; overflow:hidden; animation:slideUp .25s ease-out; position:relative; padding:0; margin:0; }
+  .mobile-chat-container { width:100vw !important; max-width:none; height:100%; background:#1e3a8a; border-radius:0; display:flex; flex-direction:column; overflow:hidden; animation:slideUp .25s ease-out; position:relative; padding:0; margin:0; }
   @keyframes slideUp { from{transform:translateY(100%);} to{transform:translateY(0);} }
   /* 모바일 팝업 안의 채팅 패널 조정 */
   .mobile-chat-container { padding-top:0 !important; margin-top:0 !important; }
