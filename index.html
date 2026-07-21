@@ -453,7 +453,7 @@
 
   /* 메시지 배치 */
   .msg { max-width:82%; box-sizing:border-box; display:flex; flex-direction:column; gap:2px; }
-  .msg-row { display:flex; gap:6px; align-items:flex-start; }
+  .msg-row { display:flex; gap:6px; align-items:flex-start; min-width:0; max-width:100%; }
   /* 이름 아바타 - 당구공 대신 텍스트 이름 표시 */
   .name-avatar {
     padding:4px 11px;
@@ -512,7 +512,7 @@
   .msg-bubble.has-image img { display:block; }
 
   /* 말풍선 + 삭제 버튼 래퍼 */
-  .msg-bubble-wrap { position:relative; display:inline-flex; align-items:center; gap:6px; }
+  .msg-bubble-wrap { position:relative; display:inline-flex; align-items:center; gap:6px; max-width:100%; min-width:0; }
   .msg.mine .msg-bubble-wrap { flex-direction:row-reverse; }
   .msg-del-btn {
     width:20px; height:20px; border-radius:50%; padding:0;
@@ -530,7 +530,7 @@
     .msg.selected .msg-del-btn { opacity:1; background:rgba(239,68,68,0.85); color:#fff; border-color:#ef4444; width:26px; height:26px; }
     .msg.selected .msg-bubble { outline:2px solid rgba(59,130,246,0.5); outline-offset:2px; }
   }
-  .msg-bubble img { max-width:200px; max-height:200px; border-radius:8px; display:block; cursor:pointer; }
+  .msg-bubble img { max-width:100%; width:200px; max-height:200px; height:auto; border-radius:8px; display:block; cursor:pointer; }
   .msg-time { font-size:12px; color:#64748b; font-weight:500; }
   .chat-input-area {
     padding:6px 14px;
@@ -2657,12 +2657,13 @@ function resizeChatPanelMobile() {
   const slot = document.getElementById('mobileChatTabContent');
   if (!slot) return;
   const top = slot.getBoundingClientRect().top;
+  const tabbarEl = document.getElementById('mobileTabbar');
+  const tabbarHeight = tabbarEl ? tabbarEl.offsetHeight : 88;
   // 실제로 눈에 보이는 화면 높이 (기기별 오차를 감안해 더 작은 값을 우선 사용)
   const candidates = [window.innerHeight, document.documentElement.clientHeight];
   if (window.visualViewport) candidates.push(window.visualViewport.height);
   const trueViewportHeight = Math.min(...candidates.filter(v => v > 0));
-  // 탭바(약 88px)를 위한 여유 공간을 넉넉히 확보 (탭바는 sticky라 알아서 뒤따라옴)
-  const available = trueViewportHeight - top - 100;
+  const available = trueViewportHeight - top - tabbarHeight;
   panel.style.height = Math.max(available, 320) + 'px';
   // 페이지 자체는 스크롤되지 않도록 고정 (헤더/입력창/탭바가 밀리지 않게, 메시지 영역만 스크롤)
   document.body.style.height = trueViewportHeight + 'px';
