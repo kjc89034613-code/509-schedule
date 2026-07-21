@@ -861,7 +861,7 @@
       <div class="chat-panel">
         <div class="chat-panel-header">
           <div class="room-title-row" style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:0;padding-bottom:0;border-bottom:none;">
-            <span class="room-title">💬 대화창 <span style="font-size:11px;opacity:.6;">v20260721-4</span></span>
+            <span class="room-title">💬 대화창 <span style="font-size:11px;opacity:.6;">v20260721-5</span></span>
             <div style="position:relative;">
               <button class="owner-btn" id="ownerBtn" onclick="toggleOwnerDropdown(event)">
                 <span id="ownerBtnLabel">방장선택</span>
@@ -2666,9 +2666,6 @@ function resizeChatPanelMobile() {
   const trueViewportHeight = Math.min(...candidates.filter(v => v > 0));
   const available = trueViewportHeight - top - tabbarHeight;
   panel.style.height = Math.max(available, 320) + 'px';
-  // 페이지 자체는 스크롤되지 않도록 고정 (헤더/입력창/탭바가 밀리지 않게, 메시지 영역만 스크롤)
-  document.body.style.height = trueViewportHeight + 'px';
-  document.body.style.overflow = 'hidden';
 }
 
 function openMobileChat() {
