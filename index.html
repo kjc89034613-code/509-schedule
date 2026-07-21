@@ -49,8 +49,8 @@
     body.tab-schedule .tab-schedule { display:block; }
     body.tab-calendar .tab-calendar { display:block; }
     body.tab-chat .tab-chat-content { display:flex !important; }
-    .tab-chat-content { flex-direction:column; background:#1e3a8a; border-radius:12px; overflow:hidden; }
-    .tab-chat-content .chat-panel { border:none !important; box-shadow:none !important; margin:0 !important; border-radius:12px !important; width:100% !important; background:#1e3a8a !important; }
+    .tab-chat-content { flex-direction:column; background:#1e3a8a; border-radius:12px; overflow:hidden; min-height:400px; }
+    .tab-chat-content .chat-panel { border:none !important; box-shadow:none !important; margin:0 !important; border-radius:12px !important; width:100% !important; background:#1e3a8a !important; min-height:400px !important; }
     /* 모바일 - 테이블이 화면에 딱 맞도록 */
     .table-wrap { max-height:280px; overflow-x:hidden; }
     table { min-width:0 !important; table-layout:fixed; width:100% !important; }
@@ -2566,10 +2566,11 @@ function setupMobileChat() {
 }
 
 function applyChatLayout() {
+  try {
   const chatPanel = document.querySelector('.chat-panel');
   const rightCol = document.querySelector('.right-col');
   const mobileTabSlot = document.getElementById('mobileChatTabContent');
-  if (!chatPanel) return;
+  if (!chatPanel || !mobileTabSlot) return;
 
   if (isMobileView) {
     // 모바일: chat-panel을 세부일정/일정등록과 같은 방식의 탭 콘텐츠 영역으로 이동
@@ -2597,6 +2598,7 @@ function applyChatLayout() {
       chatPanel.style.maxHeight = '';
     }
   }
+  } catch(e) { console.error('applyChatLayout 오류:', e); }
 }
 
 // 채팅 패널 높이를 실제 화면 크기(window.innerHeight) 기준으로 정확히 계산
@@ -2645,6 +2647,8 @@ function setMobileTab(tab) {
   });
   if (tab === 'chat') {
     document.getElementById('chatFab').classList.add('hidden-badge');
+    // 혹시 아직 채팅 패널이 탭 영역으로 이동 안 된 상태라면 다시 시도
+    try { applyChatLayout(); } catch(e) { console.error('채팅 레이아웃 이동 오류:', e); }
     // 레이아웃 반영 후 높이 계산 (display:none → flex 전환 직후이므로 약간의 지연)
     setTimeout(resizeChatPanelMobile, 30);
   }
