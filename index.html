@@ -437,7 +437,7 @@
   .mobile-tabbar .tab-btn.has-badge .tab-badge { display:block; }
   /* 채팅 탭 - 채팅 컨테이너 위치 (다른 탭과 동일 배치, 상단 헤더 아래 ~ 하단 탭바 위) */
   body.tab-chat .mobile-chat-overlay { display:flex !important; }
-  body.tab-chat .mobile-tab-content { display:none !important; }
+  body.tab-chat .mobile-tab-content:not(.tab-chat-content) { display:none !important; }
   .chat-panel { background:var(--surface); border:1px solid var(--border); border-radius:12px; display:flex; flex-direction:column; height:100%; min-height:600px; max-height:calc(100vh - 40px); box-shadow:var(--shadow-lg); overflow:hidden; margin-bottom:20px; position:sticky; top:16px; }
   /* 당구공 아바타 */
   .billiard { display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:50%; font-size:10px; font-weight:900; color:#000; box-shadow:0 2px 4px rgba(0,0,0,0.25), inset -2px -3px 4px rgba(0,0,0,0.25), inset 2px 3px 4px rgba(255,255,255,0.6); position:relative; overflow:hidden; flex-shrink:0; font-family:'Georgia',serif; }
