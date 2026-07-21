@@ -2623,17 +2623,20 @@ function showDebugOverlay() {
   const messages = document.getElementById('chatMessages');
   const tabbar = document.getElementById('mobileTabbar');
   const info = [
+    'UA: ' + navigator.userAgent.slice(0,60),
     'innerW/H: ' + window.innerWidth + '/' + window.innerHeight,
     'outerW/H: ' + window.outerWidth + '/' + window.outerHeight,
     'devicePixelRatio: ' + window.devicePixelRatio,
     'visualViewport: ' + (window.visualViewport ? (window.visualViewport.width+'/'+window.visualViewport.height+' scale:'+window.visualViewport.scale) : 'N/A'),
     'documentEl clientW/H: ' + document.documentElement.clientWidth + '/' + document.documentElement.clientHeight,
     'bodyScrollH: ' + document.body.scrollHeight,
+    'scrollY: ' + window.scrollY,
     'panel h(offset/style): ' + (panel?panel.offsetHeight:'-') + '/' + (panel?panel.style.height:'-'),
+    'panel top/bottom: ' + (panel?panel.getBoundingClientRect().top.toFixed(0):'-') + '/' + (panel?panel.getBoundingClientRect().bottom.toFixed(0):'-'),
     'header h: ' + (header?header.offsetHeight:'-'),
     'input h: ' + (input?input.offsetHeight:'-'),
     'messages h(client/scroll): ' + (messages?messages.clientHeight:'-') + '/' + (messages?messages.scrollHeight:'-'),
-    'tabbar top: ' + (tabbar?tabbar.getBoundingClientRect().top:'-'),
+    'tabbar top/bottom: ' + (tabbar?tabbar.getBoundingClientRect().top.toFixed(0):'-') + '/' + (tabbar?tabbar.getBoundingClientRect().bottom.toFixed(0):'-'),
     'root fontSize: ' + getComputedStyle(document.documentElement).fontSize,
   ].join(' | ');
   el.textContent = info;
@@ -2692,6 +2695,7 @@ function setMobileTab(tab) {
     try { applyChatLayout(); } catch(e) { console.error('채팅 레이아웃 이동 오류:', e); }
     // 레이아웃 반영 후 높이 계산 (display:none → flex 전환 직후이므로 약간의 지연)
     setTimeout(resizeChatPanelMobile, 30);
+    setTimeout(showDebugOverlay, 200);
   }
   // 스크롤 상단으로
   window.scrollTo(0, 0);
