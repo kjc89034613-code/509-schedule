@@ -2604,6 +2604,8 @@ function applyChatLayout() {
       chatPanel.style.margin = '';
       chatPanel.style.borderRadius = '';
       chatPanel.style.maxHeight = '';
+      document.body.style.height = '';
+      document.body.style.overflow = '';
     }
   }
   } catch(e) { console.error('applyChatLayout 오류:', e); }
@@ -2662,6 +2664,9 @@ function resizeChatPanelMobile() {
   // 탭바(약 88px)를 위한 여유 공간을 넉넉히 확보 (탭바는 sticky라 알아서 뒤따라옴)
   const available = trueViewportHeight - top - 100;
   panel.style.height = Math.max(available, 320) + 'px';
+  // 페이지 자체는 스크롤되지 않도록 고정 (헤더/입력창/탭바가 밀리지 않게, 메시지 영역만 스크롤)
+  document.body.style.height = trueViewportHeight + 'px';
+  document.body.style.overflow = 'hidden';
 }
 
 function openMobileChat() {
@@ -2696,6 +2701,10 @@ function setMobileTab(tab) {
     try { applyChatLayout(); } catch(e) { console.error('채팅 레이아웃 이동 오류:', e); }
     // 레이아웃 반영 후 높이 계산 (display:none → flex 전환 직후이므로 약간의 지연)
     setTimeout(resizeChatPanelMobile, 30);
+  } else {
+    // 채팅 탭이 아니면 페이지 스크롤 고정을 해제 (세부일정/일정등록은 원래대로 스크롤 가능해야 함)
+    document.body.style.height = '';
+    document.body.style.overflow = '';
   }
   // 스크롤 상단으로
   window.scrollTo(0, 0);
