@@ -497,7 +497,7 @@
   .chat-all-btn { padding:6px 15px; border-radius:20px; border:1px solid var(--border); cursor:pointer; font-size:12px; font-weight:800; background:linear-gradient(180deg,#fff 0%,#f3f4f6 100%); color:var(--text); transition:all .15s; box-shadow:var(--shadow-sm), inset 0 1px 0 #fff; }
   .chat-all-btn:hover { transform:translateY(-1px); box-shadow:var(--shadow-md); }
   .chat-all-btn.active-all { background:linear-gradient(180deg,#22c55e 0%,#15803d 100%); color:#fff; border-color:#15803d; text-shadow:0 1px 1px rgba(0,0,0,0.15); }
-  .chat-messages { flex:1; overflow-y:auto; padding:16px 14px; display:flex; flex-direction:column; gap:10px; background:linear-gradient(180deg,#f1f5fb 0%,#e8eef8 100%); }
+  .chat-messages { flex:1; min-height:0; overflow-y:auto; padding:16px 14px; display:flex; flex-direction:column; gap:10px; background:linear-gradient(180deg,#f1f5fb 0%,#e8eef8 100%); }
   .msg-sender { font-size:12px; color:#64748b; font-weight:700; }
   .msg-bubble { padding:8px 14px; border-radius:14px; font-size:15px; line-height:1.35; word-break:break-word; box-shadow:0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04); border:1px solid rgba(0,0,0,0.04); }
   .msg.mine .msg-bubble { border-bottom-right-radius:6px; }
@@ -2604,6 +2604,37 @@ function applyChatLayout() {
 
 // 채팅 패널 높이를 실제 화면 크기(window.innerHeight) 기준으로 정확히 계산
 // (CSS vh/dvh 단위는 기기별로 오차가 있어, 남는 여백 문제를 피하려고 JS로 직접 계산)
+// [임시 디버그] 화면에 직접 수치 표시 (원인 파악용, 나중에 제거 예정)
+function showDebugOverlay() {
+  let el = document.getElementById('debugOverlay');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'debugOverlay';
+    el.style.cssText = 'position:fixed;top:0;left:0;right:0;background:rgba(255,0,0,0.9);color:#fff;font-size:11px;padding:6px;z-index:99999;font-family:monospace;white-space:pre-wrap;line-height:1.4;';
+    document.body.appendChild(el);
+  }
+  const panel = document.querySelector('.chat-panel');
+  const header = document.querySelector('.chat-panel-header');
+  const input = document.querySelector('.chat-input-area');
+  const messages = document.getElementById('chatMessages');
+  const tabbar = document.getElementById('mobileTabbar');
+  const info = [
+    'innerW/H: ' + window.innerWidth + '/' + window.innerHeight,
+    'outerW/H: ' + window.outerWidth + '/' + window.outerHeight,
+    'devicePixelRatio: ' + window.devicePixelRatio,
+    'visualViewport: ' + (window.visualViewport ? (window.visualViewport.width+'/'+window.visualViewport.height+' scale:'+window.visualViewport.scale) : 'N/A'),
+    'documentEl clientW/H: ' + document.documentElement.clientWidth + '/' + document.documentElement.clientHeight,
+    'bodyScrollH: ' + document.body.scrollHeight,
+    'panel h(offset/style): ' + (panel?panel.offsetHeight:'-') + '/' + (panel?panel.style.height:'-'),
+    'header h: ' + (header?header.offsetHeight:'-'),
+    'input h: ' + (input?input.offsetHeight:'-'),
+    'messages h(client/scroll): ' + (messages?messages.clientHeight:'-') + '/' + (messages?messages.scrollHeight:'-'),
+    'tabbar top: ' + (tabbar?tabbar.getBoundingClientRect().top:'-'),
+    'root fontSize: ' + getComputedStyle(document.documentElement).fontSize,
+  ].join(' | ');
+  el.textContent = info;
+}
+
 function resizeChatPanelMobile() {
   if (!isMobileView) return;
   const panel = document.querySelector('.tab-chat-content .chat-panel');
@@ -2652,6 +2683,7 @@ function setMobileTab(tab) {
     try { applyChatLayout(); } catch(e) { console.error('채팅 레이아웃 이동 오류:', e); }
     // 레이아웃 반영 후 높이 계산 (display:none → flex 전환 직후이므로 약간의 지연)
     setTimeout(resizeChatPanelMobile, 30);
+    setTimeout(showDebugOverlay, 60);
   }
   // 스크롤 상단으로
   window.scrollTo(0, 0);
