@@ -2564,6 +2564,10 @@ function setupMobileChat() {
     }
     resizeChatPanelMobile();
   });
+  // 모바일 브라우저 주소창이 나타나거나 사라질 때(실제 화면 크기 변화) 대응
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', resizeChatPanelMobile);
+  }
 }
 
 function applyChatLayout() {
@@ -2647,7 +2651,12 @@ function resizeChatPanelMobile() {
   const top = slot.getBoundingClientRect().top;
   const tabbarEl = document.getElementById('mobileTabbar');
   const tabbarHeight = tabbarEl ? tabbarEl.offsetHeight : 88;
-  const available = window.innerHeight - top - tabbarHeight - 12;
+  // 실제로 눈에 보이는 화면 높이 (모바일 브라우저의 window.innerHeight는
+  // 주소창이 보일 때 실제보다 크게 나오는 경우가 있어 더 정확한 값을 사용)
+  const trueViewportHeight = window.visualViewport
+    ? window.visualViewport.height
+    : document.documentElement.clientHeight;
+  const available = trueViewportHeight - top - tabbarHeight - 12;
   panel.style.height = Math.max(available, 320) + 'px';
 }
 
@@ -2683,7 +2692,6 @@ function setMobileTab(tab) {
     try { applyChatLayout(); } catch(e) { console.error('채팅 레이아웃 이동 오류:', e); }
     // 레이아웃 반영 후 높이 계산 (display:none → flex 전환 직후이므로 약간의 지연)
     setTimeout(resizeChatPanelMobile, 30);
-    setTimeout(showDebugOverlay, 60);
   }
   // 스크롤 상단으로
   window.scrollTo(0, 0);
