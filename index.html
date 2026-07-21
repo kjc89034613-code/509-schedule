@@ -43,7 +43,7 @@
     /* 하단 탭바 표시 */
     .mobile-tabbar { display:flex !important; }
     /* 페이지 하단 여백 (탭바 공간 확보) */
-    .app { padding-bottom:96px !important; }
+    .app { padding-bottom:0 !important; }
     /* 탭별 컨텐츠 - 기본은 숨김, active만 표시 */
     .mobile-tab-content { display:none; }
     body.tab-schedule .tab-schedule { display:block; }
@@ -372,7 +372,7 @@
   /* ============ 모바일 하단 탭바 ============ */
   .mobile-tabbar {
     display:none;
-    position:fixed;
+    position:sticky;
     bottom:0;
     left:0;
     right:0;
@@ -857,7 +857,7 @@
       <div class="chat-panel">
         <div class="chat-panel-header">
           <div class="room-title-row" style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:0;padding-bottom:0;border-bottom:none;">
-            <span class="room-title">💬 대화창 <span style="font-size:11px;opacity:.6;">v20260721-1</span></span>
+            <span class="room-title">💬 대화창 <span style="font-size:11px;opacity:.6;">v20260721-2</span></span>
             <div style="position:relative;">
               <button class="owner-btn" id="ownerBtn" onclick="toggleOwnerDropdown(event)">
                 <span id="ownerBtnLabel">방장선택</span>
@@ -2652,14 +2652,12 @@ function resizeChatPanelMobile() {
   const slot = document.getElementById('mobileChatTabContent');
   if (!slot) return;
   const top = slot.getBoundingClientRect().top;
-  const tabbarEl = document.getElementById('mobileTabbar');
-  const tabbarHeight = tabbarEl ? tabbarEl.offsetHeight : 88;
-  // 실제로 눈에 보이는 화면 높이 (모바일 브라우저의 window.innerHeight는
-  // 주소창이 보일 때 실제보다 크게 나오는 경우가 있어 더 정확한 값을 사용)
-  const trueViewportHeight = window.visualViewport
-    ? window.visualViewport.height
-    : document.documentElement.clientHeight;
-  const available = trueViewportHeight - top - tabbarHeight - 12;
+  // 실제로 눈에 보이는 화면 높이 (기기별 오차를 감안해 더 작은 값을 우선 사용)
+  const candidates = [window.innerHeight, document.documentElement.clientHeight];
+  if (window.visualViewport) candidates.push(window.visualViewport.height);
+  const trueViewportHeight = Math.min(...candidates.filter(v => v > 0));
+  // 탭바(약 88px)를 위한 여유 공간을 넉넉히 확보 (탭바는 sticky라 알아서 뒤따라옴)
+  const available = trueViewportHeight - top - 100;
   panel.style.height = Math.max(available, 320) + 'px';
 }
 
@@ -2695,7 +2693,6 @@ function setMobileTab(tab) {
     try { applyChatLayout(); } catch(e) { console.error('채팅 레이아웃 이동 오류:', e); }
     // 레이아웃 반영 후 높이 계산 (display:none → flex 전환 직후이므로 약간의 지연)
     setTimeout(resizeChatPanelMobile, 30);
-    setTimeout(showDebugOverlay, 200);
   }
   // 스크롤 상단으로
   window.scrollTo(0, 0);
