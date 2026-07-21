@@ -48,6 +48,9 @@
     .mobile-tab-content { display:none; }
     body.tab-schedule .tab-schedule { display:block; }
     body.tab-calendar .tab-calendar { display:block; }
+    body.tab-chat .tab-chat-content { display:flex !important; }
+    .tab-chat-content { flex-direction:column; background:#1e3a8a; border-radius:12px; overflow:hidden; }
+    .tab-chat-content .chat-panel { border:none !important; box-shadow:none !important; margin:0 !important; border-radius:12px !important; width:100% !important; background:#1e3a8a !important; }
     /* 모바일 - 테이블이 화면에 딱 맞도록 */
     .table-wrap { max-height:280px; overflow-x:hidden; }
     table { min-width:0 !important; table-layout:fixed; width:100% !important; }
@@ -842,6 +845,10 @@
 
       </div>
       <!-- ▲ 탭 컨텐츠 2 끝 -->
+
+      <!-- ▼ 탭 컨텐츠 3: 의사소통 (모바일 전용, 세부일정/일정등록과 같은 구조) -->
+      <div class="mobile-tab-content tab-chat-content" id="mobileChatTabContent"></div>
+      <!-- ▲ 탭 컨텐츠 3 끝 -->
     </div>
 
     <!-- 오른쪽: 채팅 패널 -->
@@ -2554,25 +2561,27 @@ function setupMobileChat() {
       // 테이블도 웹/모바일 구조가 다르므로 재렌더
       if (allSchedules && allSchedules.length !== undefined) renderTable(allSchedules);
     }
+    resizeChatPanelMobile();
   });
 }
 
 function applyChatLayout() {
   const chatPanel = document.querySelector('.chat-panel');
   const rightCol = document.querySelector('.right-col');
-  const mobileContainer = document.getElementById('mobileChatContainer');
+  const mobileTabSlot = document.getElementById('mobileChatTabContent');
   if (!chatPanel) return;
 
   if (isMobileView) {
-    // 모바일: chat-panel을 mobile container로 이동
-    if (chatPanel.parentElement !== mobileContainer) {
-      mobileContainer.innerHTML = '';
-      mobileContainer.appendChild(chatPanel);
-      chatPanel.style.height = '100%';
+    // 모바일: chat-panel을 세부일정/일정등록과 같은 방식의 탭 콘텐츠 영역으로 이동
+    if (chatPanel.parentElement !== mobileTabSlot) {
+      mobileTabSlot.innerHTML = '';
+      mobileTabSlot.appendChild(chatPanel);
       chatPanel.style.minHeight = '0';
       chatPanel.style.margin = '0';
-      chatPanel.style.borderRadius = '0';
+      chatPanel.style.borderRadius = '12px';
+      chatPanel.style.maxHeight = 'none';
     }
+    resizeChatPanelMobile();
   } else {
     // 데스크톱: chat-panel을 원래 자리로 복귀
     if (chatPanel.parentElement !== rightCol) {
@@ -2585,14 +2594,31 @@ function applyChatLayout() {
       chatPanel.style.minHeight = '';
       chatPanel.style.margin = '';
       chatPanel.style.borderRadius = '';
-      document.getElementById('mobileChatOverlay').classList.remove('open');
+      chatPanel.style.maxHeight = '';
     }
   }
 }
 
+// 채팅 패널 높이를 실제 화면 크기(window.innerHeight) 기준으로 정확히 계산
+// (CSS vh/dvh 단위는 기기별로 오차가 있어, 남는 여백 문제를 피하려고 JS로 직접 계산)
+function resizeChatPanelMobile() {
+  if (!isMobileView) return;
+  const panel = document.querySelector('.tab-chat-content .chat-panel');
+  if (!panel || document.body.classList.contains('tab-chat') === false) {
+    if (panel) return; // 채팅 탭이 아니면 계산 불필요
+    return;
+  }
+  const slot = document.getElementById('mobileChatTabContent');
+  if (!slot) return;
+  const top = slot.getBoundingClientRect().top;
+  const tabbarEl = document.getElementById('mobileTabbar');
+  const tabbarHeight = tabbarEl ? tabbarEl.offsetHeight : 88;
+  const available = window.innerHeight - top - tabbarHeight - 12;
+  panel.style.height = Math.max(available, 320) + 'px';
+}
+
 function openMobileChat() {
-  document.getElementById('mobileChatOverlay').classList.add('open');
-  document.getElementById('chatFab').classList.add('hidden-badge');
+  setMobileTab('chat');
   // 다음 폴링에서 뱃지 리셋되도록 다시 loadGroupChat 호출
   if (currentUser) loadGroupChat();
   // 스크롤 맨 아래로
@@ -2603,12 +2629,10 @@ function openMobileChat() {
 }
 
 function closeMobileChat() {
-  document.getElementById('mobileChatOverlay').classList.remove('open');
+  // 하위 호환용 (이제 채팅도 일반 탭과 동일하게 동작)
 }
 
-function closeMobileChatOnBg(e) {
-  if (e.target.id === 'mobileChatOverlay') closeMobileChat();
-}
+function closeMobileChatOnBg(e) {}
 
 // ============ 모바일 탭 전환 ============
 function setMobileTab(tab) {
@@ -2619,12 +2643,10 @@ function setMobileTab(tab) {
   document.querySelectorAll('.mobile-tabbar .tab-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.tab === tab);
   });
-  // 채팅 탭이면 채팅 팝업 열기 + 마지막 확인 시간 저장
   if (tab === 'chat') {
-    openMobileChat();
-  } else {
-    // 다른 탭으로 이동 시 채팅 팝업 닫기
-    closeMobileChat();
+    document.getElementById('chatFab').classList.add('hidden-badge');
+    // 레이아웃 반영 후 높이 계산 (display:none → flex 전환 직후이므로 약간의 지연)
+    setTimeout(resizeChatPanelMobile, 30);
   }
   // 스크롤 상단으로
   window.scrollTo(0, 0);
