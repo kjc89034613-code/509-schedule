@@ -831,20 +831,7 @@
         </div>
       </div>
 <!-- 방장(채팅 사용자) 선택 - 좌측 하단 소형 배치 -->
-      <div style="display:flex;align-items:center;gap:6px;margin-top:10px;">
-        <span style="font-size:11px;color:var(--text2);">방장:</span>
-        <div style="position:relative;">
-          <button class="owner-btn owner-btn-mini" id="ownerBtn" onclick="toggleOwnerDropdown(event)">
-            <span id="ownerBtnLabel">방장선택</span>
-            <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" style="margin-left:3px"><polyline points="6 9 12 15 18 9"/></svg>
-          </button>
-          <div class="owner-dropdown" id="ownerDropdown" style="left:0;right:auto;top:auto;bottom:calc(100% + 4px);">
-            <div class="owner-item" onclick="setOwner('구자천')">구자천</div>
-            <div class="owner-item" onclick="setOwner('공석민')">공석민</div>
-            <div class="owner-item" onclick="setOwner('오세훈')">오세훈</div>
-          </div>
-        </div>
-      </div>
+
       </div>
       <!-- ▲ 탭 컨텐츠 1 끝 -->
 
@@ -862,7 +849,21 @@
         </div>
       </div>
       <div class="cal-grid" id="calGrid"></div>
-
+<!-- 방장(채팅 사용자) 선택 - 좌측 하단 소형 배치 -->
+      <div style="display:flex;align-items:center;gap:6px;margin-top:10px;">
+        <span style="font-size:11px;color:var(--text2);">방장:</span>
+        <div style="position:relative;">
+          <button class="owner-btn owner-btn-mini" id="ownerBtn" onclick="toggleOwnerDropdown(event)">
+            <span id="ownerBtnLabel">방장선택</span>
+            <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" style="margin-left:3px"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="owner-dropdown" id="ownerDropdown" style="left:0;right:auto;top:auto;bottom:calc(100% + 4px);">
+            <div class="owner-item" onclick="setOwner('구자천')">구자천</div>
+            <div class="owner-item" onclick="setOwner('공석민')">공석민</div>
+            <div class="owner-item" onclick="setOwner('오세훈')">오세훈</div>
+          </div>
+        </div>
+      </div>
       </div>
       <!-- ▲ 탭 컨텐츠 2 끝 -->
 
