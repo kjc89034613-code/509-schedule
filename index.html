@@ -488,6 +488,7 @@
   .owner-btn:hover { background:#fff; transform:translateY(-1px); box-shadow:var(--shadow-md); }
   .owner-dropdown { position:absolute; top:calc(100% + 4px); right:0; background:#fff; border:1px solid var(--border); border-radius:10px; box-shadow:var(--shadow-lg); min-width:130px; display:none; z-index:50; overflow:hidden; }
   .owner-dropdown.open { display:block; }
+  .owner-btn-mini { padding:5px 10px !important; font-size:11px !important; border-radius:8px !important; background:var(--surface) !important; color:var(--text) !important; border:1px solid var(--border) !important; box-shadow:none !important; }
   .owner-item { padding:11px 16px; font-size:13px; font-weight:700; color:var(--text); cursor:pointer; transition:background .15s; }
   .owner-item:hover { background:#eff6ff; color:#1e40af; }
   .owner-item.active { background:#dbeafe; color:#1e40af; }
@@ -829,7 +830,21 @@
           <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--oh-cal)"></div>오세훈</div>
         </div>
       </div>
-
+<!-- 방장(채팅 사용자) 선택 - 좌측 하단 소형 배치 -->
+      <div style="display:flex;align-items:center;gap:6px;margin-top:10px;">
+        <span style="font-size:11px;color:var(--text2);">방장:</span>
+        <div style="position:relative;">
+          <button class="owner-btn owner-btn-mini" id="ownerBtn" onclick="toggleOwnerDropdown(event)">
+            <span id="ownerBtnLabel">방장선택</span>
+            <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" style="margin-left:3px"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="owner-dropdown" id="ownerDropdown" style="left:0;right:auto;top:auto;bottom:calc(100% + 4px);">
+            <div class="owner-item" onclick="setOwner('구자천')">구자천</div>
+            <div class="owner-item" onclick="setOwner('공석민')">공석민</div>
+            <div class="owner-item" onclick="setOwner('오세훈')">오세훈</div>
+          </div>
+        </div>
+      </div>
       </div>
       <!-- ▲ 탭 컨텐츠 1 끝 -->
 
@@ -860,19 +875,8 @@
     <div class="right-col">
       <div class="chat-panel">
         <div class="chat-panel-header">
-          <div class="room-title-row" style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:0;padding-bottom:0;border-bottom:none;">
-            <span class="room-title">💬 대화창 <span style="font-size:11px;opacity:.6;">v20260721-5</span></span>
-            <div style="position:relative;">
-              <button class="owner-btn" id="ownerBtn" onclick="toggleOwnerDropdown(event)">
-                <span id="ownerBtnLabel">방장선택</span>
-                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" style="margin-left:4px"><polyline points="6 9 12 15 18 9"/></svg>
-              </button>
-              <div class="owner-dropdown" id="ownerDropdown">
-                <div class="owner-item" onclick="setOwner('구자천')">구자천</div>
-                <div class="owner-item" onclick="setOwner('공석민')">공석민</div>
-                <div class="owner-item" onclick="setOwner('오세훈')">오세훈</div>
-              </div>
-            </div>
+<div class="room-title-row" style="display:flex;align-items:center;gap:8px;margin-bottom:0;padding-bottom:0;border-bottom:none;">
+            <span class="room-title">💬 대화창 <span style="font-size:11px;opacity:.6;">v20260721-6</span></span>
           </div>
           <div id="peerSelect" style="display:none;"></div>
         </div>
