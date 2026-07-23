@@ -51,8 +51,10 @@
     body.tab-calendar .tab-calendar { display:block; }
     body.tab-chat .tab-chat-content { display:flex !important; }
     body.tab-chat .header { display:none !important; }
-    .tab-chat-content { flex-direction:column; background:#1e3a8a; border-radius:12px; overflow:hidden; min-height:400px; }
-    .tab-chat-content .chat-panel { border:none !important; box-shadow:none !important; margin:0 !important; border-radius:12px !important; width:100% !important; background:#1e3a8a !important; min-height:400px !important; }
+    .tab-chat-content { flex-direction:column; background:transparent; border-radius:0; overflow:hidden; min-height:400px; }
+    .tab-chat-content .chat-panel { border:none !important; box-shadow:none !important; margin:0 !important; border-radius:0 !important; width:100% !important; background:var(--surface) !important; min-height:400px !important; }
+    .tab-chat-content .chat-panel-header { background:transparent !important; border-bottom:2px solid var(--border) !important; border-radius:0 !important; box-shadow:none !important; padding:2px 0 6px 0 !important; min-height:32px !important; }
+    .tab-chat-content .room-title { color:var(--text) !important; text-shadow:none !important; font-size:16px !important; font-weight:800 !important; }
     /* 모바일 - 테이블이 화면에 딱 맞도록 */
     .table-wrap { max-height:280px; overflow-x:hidden; }
     table { min-width:0 !important; table-layout:fixed; width:100% !important; }
