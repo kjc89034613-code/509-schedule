@@ -50,11 +50,11 @@
     body.tab-schedule .tab-schedule { display:block; }
     body.tab-calendar .tab-calendar { display:block; }
     body.tab-chat .tab-chat-content { display:flex !important; }
-    body.tab-chat .header { display:none !important; }
+    body.tab-chat .header { display:flex !important; }
     .tab-chat-content { flex-direction:column; background:transparent; border-radius:0; overflow:hidden; min-height:400px; }
     .tab-chat-content .chat-panel { border:none !important; box-shadow:none !important; margin:0 !important; border-radius:0 !important; width:100% !important; background:var(--surface) !important; min-height:400px !important; }
-    .tab-chat-content .chat-panel-header { background:transparent !important; border-bottom:2px solid var(--border) !important; border-radius:0 !important; box-shadow:none !important; padding:2px 0 6px 0 !important; min-height:32px !important; }
-    .tab-chat-content .room-title { color:var(--text) !important; text-shadow:none !important; font-size:16px !important; font-weight:800 !important; }
+    .tab-chat-content .chat-panel-header { display:none !important; }
+    .tab-chat-content .chat-input-area { border-radius:0 !important; }
     /* 모바일 - 테이블이 화면에 딱 맞도록 */
     .table-wrap { max-height:280px; overflow-x:hidden; }
     table { min-width:0 !important; table-layout:fixed; width:100% !important; }
@@ -757,7 +757,7 @@
       <div class="header">
         <h1>
           <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-          직원 일정 공유
+          <span id="appHeaderTitleText">직원 일정 공유</span>
         </h1>
         <div style="display:flex;align-items:center;gap:6px;">
           <button class="notif-btn notif-off" id="notifBtn" onclick="requestNotificationPermission()" title="알림 켜기">
@@ -2701,6 +2701,9 @@ function setMobileTab(tab) {
   document.querySelectorAll('.mobile-tabbar .tab-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.tab === tab);
   });
+  // 상단 공통 헤더 문구 전환 (의사소통 탭에서는 "직원 일정 공유-대화창"으로 표시)
+  const headerTitleEl = document.getElementById('appHeaderTitleText');
+  if (headerTitleEl) headerTitleEl.textContent = (tab === 'chat') ? '직원 일정 공유-대화창' : '직원 일정 공유';
   if (tab === 'chat') {
     document.getElementById('chatFab').classList.add('hidden-badge');
     // 혹시 아직 채팅 패널이 탭 영역으로 이동 안 된 상태라면 다시 시도
