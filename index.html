@@ -835,26 +835,28 @@
           <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
           월간 일정표
         </span>
-        <div id="ownerWidgetDesktopSlot" style="display:flex;align-items:center;gap:8px;">
-          <div id="ownerWidgetBox" style="display:flex;align-items:center;gap:6px;">
-            <span style="font-size:13px;color:var(--text2);">방장:</span>
-            <div style="position:relative;">
-              <button class="owner-btn owner-btn-mini" id="ownerBtn" onclick="toggleOwnerDropdown(event)">
-                <span id="ownerBtnLabel">방장선택</span>
-                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" style="margin-left:4px"><polyline points="6 9 12 15 18 9"/></svg>
-              </button>
-              <div class="owner-dropdown" id="ownerDropdown">
-                <div class="owner-item" onclick="setOwner('구자천')">구자천</div>
-                <div class="owner-item" onclick="setOwner('공석민')">공석민</div>
-                <div class="owner-item" onclick="setOwner('오세훈')">오세훈</div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div id="ownerWidgetDesktopSlot" style="display:flex;align-items:center;gap:8px;">
+            <div id="ownerWidgetBox" style="display:flex;align-items:center;gap:6px;">
+              <span style="font-size:13px;color:var(--text2);">방장:</span>
+              <div style="position:relative;">
+                <button class="owner-btn owner-btn-mini" id="ownerBtn" onclick="toggleOwnerDropdown(event)">
+                  <span id="ownerBtnLabel">방장선택</span>
+                  <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" style="margin-left:4px"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+                <div class="owner-dropdown" id="ownerDropdown">
+                  <div class="owner-item" onclick="setOwner('구자천')">구자천</div>
+                  <div class="owner-item" onclick="setOwner('공석민')">공석민</div>
+                  <div class="owner-item" onclick="setOwner('오세훈')">오세훈</div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        <div class="month-nav-inline">
-          <button class="nav-btn-mini" onclick="changeMonth(-1)">&#8249;</button>
-          <span id="monthLabel"></span>
-          <button class="nav-btn-mini" onclick="changeMonth(1)">&#8250;</button>
+          <div class="month-nav-inline">
+            <button class="nav-btn-mini" onclick="changeMonth(-1)">&#8249;</button>
+            <span id="monthLabel"></span>
+            <button class="nav-btn-mini" onclick="changeMonth(1)">&#8250;</button>
+          </div>
         </div>
       </div>
       <div class="cal-grid" id="calGrid"></div>
@@ -1126,6 +1128,7 @@ let currentUser  = localStorage.getItem('sched_me') || '';
 let currentPeer  = '';
 let isAllChat    = false;
 let chatPollTimer = null;
+let groupChatCache = []; // 단톡방 메시지 로컬 캐시 (5초마다 전체 재요청 대신 새 메시지만 가져오기 위함)
 let addPeerOpen  = false;
 
 // ── 브라우저 알림 상태 ─────────────────────────────────────
@@ -2282,12 +2285,26 @@ function setLastSeen(n) {
 async function loadGroupChat(){
   if(!currentUser||!checkConfig())return;
   try{
-    const q='/chats?receiver=eq.__GROUP__&order=created_at.asc&limit=200';
-    const data=await apiReq(q);
-    detectNewChats(data);
-    renderGroupChat(data);
+    let q;
+    if (groupChatCache.length > 0) {
+      // 이미 불러온 게 있으면, 그 이후에 생긴 메시지만 요청 (사진 포함 전체를 매번 다시 받지 않기 위함)
+      const lastCreated = groupChatCache[groupChatCache.length - 1].created_at;
+      q = '/chats?receiver=eq.__GROUP__&created_at=gt.' + encodeURIComponent(lastCreated) + '&order=created_at.asc&limit=200';
+    } else {
+      q = '/chats?receiver=eq.__GROUP__&order=created_at.asc&limit=200';
+    }
+    const data = await apiReq(q);
+    if (data && data.length) {
+      const existingIds = new Set(groupChatCache.map(m => m.id));
+      const newOnes = data.filter(m => !existingIds.has(m.id));
+      if (newOnes.length) {
+        groupChatCache = groupChatCache.concat(newOnes);
+        detectNewChats(newOnes);
+      }
+    }
+    renderGroupChat(groupChatCache);
     // 모바일 FAB 뱃지 업데이트 (팝업이 닫혀있을 때만)
-    updateFabBadge(data);
+    updateFabBadge(groupChatCache);
   }catch(e){console.error('단톡방 로드 실패',e);}
 }
 
@@ -2430,8 +2447,9 @@ async function deleteChatMessage(id, e) {
   if (!confirm('이 메시지를 삭제하시겠습니까?')) return;
   try {
     await apiReq('/chats?id=eq.'+id, 'DELETE');
+    groupChatCache = groupChatCache.filter(m => m.id !== id);
+    renderGroupChat(groupChatCache);
     showToast('삭제되었습니다');
-    await loadGroupChat();
   } catch(err) {
     showToast('삭제 실패: ' + err.message);
   }
