@@ -1128,7 +1128,8 @@ let currentUser  = localStorage.getItem('sched_me') || '';
 let currentPeer  = '';
 let isAllChat    = false;
 let chatPollTimer = null;
-let groupChatCache = []; // 단톡방 메시지 로컬 캐시 (5초마다 전체 재요청 대신 새 메시지만 가져오기 위함)
+let groupChatCache = [];   // 그룹채팅 누적 캐시 (증분 폴링용)
+let groupChatLoaded = false;
 let addPeerOpen  = false;
 
 // ── 브라우저 알림 상태 ─────────────────────────────────────
@@ -1480,6 +1481,14 @@ function detectNewSchedules(schedules) {
   });
 }
 
+// 채팅 이미지 메시지 판별/URL 추출 (구버전 base64, 신버전 [IMG]url 둘 다 지원)
+function isImageMsg(msg){
+  return typeof msg === 'string' && (msg.startsWith('data:image/') || msg.startsWith('[IMG]'));
+}
+function imgSrcOf(msg){
+  return msg.startsWith('[IMG]') ? msg.slice(5) : msg;
+}
+
 // 새 채팅 감지
 function detectNewChats(chats) {
   if (!notifsInitialized) {
@@ -1493,7 +1502,7 @@ function detectNewChats(chats) {
       // FCM 서버 푸시가 이미 등록되어 있으면 로컬 알림은 생략 (중복 알림 방지)
       if (fcmToken) return;
       let body = c.message || '';
-      if (body.startsWith('data:image/')) body = '📷 이미지';
+      if (isImageMsg(body)) body = '📷 이미지';
       if (body.length > 80) body = body.substring(0, 80) + '...';
       showBrowserNotification('💬 ' + c.sender, body, 'chat-' + c.id);
     }
@@ -2151,8 +2160,8 @@ function renderChatMessages(data){
     const t=new Date(m.created_at);
     const ts=formatMsgTime(t);
     let bubbleContent;
-    if(m.message.startsWith('data:image/')){
-      const safeSrc = escHtml(m.message); bubbleContent = `<img src="${safeSrc}" alt="이미지" onclick="viewImg(this.src)" onerror="this.style.display='none';this.insertAdjacentHTML('afterend','[이미지 로드 실패]')">`;
+    if(isImageMsg(m.message)){
+      const safeSrc = escHtml(imgSrcOf(m.message)); bubbleContent = `<img src="${safeSrc}" alt="이미지" onclick="viewImg(this.src)" onerror="this.style.display='none';this.insertAdjacentHTML('afterend','[이미지 로드 실패]')">`;
     } else {
       bubbleContent=escHtml(m.message);
     }
@@ -2161,7 +2170,7 @@ function renderChatMessages(data){
       <div class="msg-row">
         ${ball}
         <div style="display:flex;flex-direction:column;gap:2px;${side==='mine'?'align-items:flex-end;':''}">
-          <div class="msg-bubble${m.message.startsWith("data:image/")?" has-image":""}">${bubbleContent}</div>
+          <div class="msg-bubble${isImageMsg(m.message)?" has-image":""}">${bubbleContent}</div>
           <div class="msg-time">${ts}</div>
         </div>
       </div>
@@ -2205,12 +2214,58 @@ async function sendImage(input){
     }
     try{
       lastSentByMe = Date.now();
-      await apiReq('/chats','POST',{sender:currentUser,receiver:'__GROUP__',message:dataUrl,is_read:false});
+      // base64를 그대로 메시지에 넣지 않고 Supabase Storage에 업로드 후 URL만 저장 (이그레스 절감)
+      const publicUrl = await uploadChatImage(dataUrl);
+      await apiReq('/chats','POST',{sender:currentUser,receiver:'__GROUP__',message:'[IMG]'+publicUrl,is_read:false});
       await loadGroupChat();
     }catch(err){showToast('이미지 전송 실패: '+err.message);}
     input.value='';
   };
   reader.readAsDataURL(file);
+}
+
+// dataURL(base64) → Blob 변환
+function dataUrlToBlob(dataUrl){
+  const [meta, b64] = dataUrl.split(',');
+  const mime = meta.match(/data:(.*?);base64/)[1];
+  const bin = atob(b64);
+  const arr = new Uint8Array(bin.length);
+  for (let i=0; i<bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return new Blob([arr], {type: mime});
+}
+
+// 채팅 이미지를 Supabase Storage(chat-images 버킷)에 업로드하고 공개 URL 반환
+async function uploadChatImage(dataUrl){
+  const blob = dataUrlToBlob(dataUrl);
+  const path = `chat/${Date.now()}_${Math.random().toString(36).slice(2,8)}.jpg`;
+  const res = await fetch(`${SUPABASE_URL}/storage/v1/object/chat-images/${path}`, {
+    method:'POST',
+    headers:{
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': blob.type || 'image/jpeg'
+    },
+    body: blob
+  });
+  if(!res.ok) throw new Error(await res.text());
+  return `${SUPABASE_URL}/storage/v1/object/public/chat-images/${path}`;
+}
+
+// Storage에 올라간 채팅 이미지 파일 삭제 (메시지 삭제 시 같이 호출)
+async function deleteChatImageFile(publicUrl){
+  try{
+    const marker = '/storage/v1/object/public/chat-images/';
+    const idx = publicUrl.indexOf(marker);
+    if(idx === -1) return; // storage 이미지가 아니면(base64 구버전 등) 무시
+    const path = publicUrl.slice(idx + marker.length);
+    await fetch(`${SUPABASE_URL}/storage/v1/object/chat-images/${path}`, {
+      method:'DELETE',
+      headers:{
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`
+      }
+    });
+  }catch(e){ console.error('이미지 파일 삭제 실패', e); }
 }
 
 function resizeImage(dataUrl,maxW){
@@ -2285,26 +2340,29 @@ function setLastSeen(n) {
 async function loadGroupChat(){
   if(!currentUser||!checkConfig())return;
   try{
-    let q;
-    if (groupChatCache.length > 0) {
-      // 이미 불러온 게 있으면, 그 이후에 생긴 메시지만 요청 (사진 포함 전체를 매번 다시 받지 않기 위함)
-      const lastCreated = groupChatCache[groupChatCache.length - 1].created_at;
-      q = '/chats?receiver=eq.__GROUP__&created_at=gt.' + encodeURIComponent(lastCreated) + '&order=created_at.asc&limit=200';
-    } else {
-      q = '/chats?receiver=eq.__GROUP__&order=created_at.asc&limit=200';
-    }
-    const data = await apiReq(q);
-    if (data && data.length) {
-      const existingIds = new Set(groupChatCache.map(m => m.id));
-      const newOnes = data.filter(m => !existingIds.has(m.id));
-      if (newOnes.length) {
-        groupChatCache = groupChatCache.concat(newOnes);
-        detectNewChats(newOnes);
+    let data;
+    if(!groupChatLoaded){
+      // 최초 1회만 최근 200개 전체 조회
+      const q='/chats?receiver=eq.__GROUP__&order=created_at.asc&limit=200';
+      data=await apiReq(q);
+      groupChatCache=data;
+      groupChatLoaded=true;
+    } else if(groupChatCache.length){
+      // 이후 폴링은 마지막으로 받은 메시지 이후 데이터만 증분 조회 (이그레스 절감)
+      const lastTime=groupChatCache[groupChatCache.length-1].created_at;
+      const q='/chats?receiver=eq.__GROUP__&created_at=gt.'+encodeURIComponent(lastTime)+'&order=created_at.asc&limit=50';
+      const newRows=await apiReq(q);
+      if(newRows.length){
+        groupChatCache=groupChatCache.concat(newRows).slice(-200);
       }
+      data=groupChatCache;
+    } else {
+      data=groupChatCache;
     }
-    renderGroupChat(groupChatCache);
+    detectNewChats(data);
+    renderGroupChat(data);
     // 모바일 FAB 뱃지 업데이트 (팝업이 닫혀있을 때만)
-    updateFabBadge(groupChatCache);
+    updateFabBadge(data);
   }catch(e){console.error('단톡방 로드 실패',e);}
 }
 
@@ -2376,15 +2434,15 @@ function renderGroupChat(data){
     const t=new Date(m.created_at);
     const ts=formatFullMsgTime(t);
     let bubbleContent;
-    if(m.message.startsWith('data:image/')){
-      const safeSrc = escHtml(m.message); bubbleContent = `<img src="${safeSrc}" alt="이미지" onclick="viewImg(this.src)" onerror="this.style.display='none';this.insertAdjacentHTML('afterend','[이미지 로드 실패]')">`;
+    if(isImageMsg(m.message)){
+      const safeSrc = escHtml(imgSrcOf(m.message)); bubbleContent = `<img src="${safeSrc}" alt="이미지" onclick="viewImg(this.src)" onerror="this.style.display='none';this.insertAdjacentHTML('afterend','[이미지 로드 실패]')">`;
     } else {
       bubbleContent=escHtml(m.message);
     }
     // 아바타 - 이름 텍스트로 (본인만 파란색, 다른 사람은 회색)
     const emp = getEmpInfo(m.sender);
     const nameAvatar = `<div class="name-avatar ${emp.pillClass}">${escHtml(m.sender)}</div>`;
-    const imgCls = m.message.startsWith("data:image/") ? " has-image" : "";
+    const imgCls = isImageMsg(m.message) ? " has-image" : "";
     const bubbleClass = (isOwner ? "msg-bubble owner-bubble" : "msg-bubble other-bubble") + imgCls;
     // 본인(현재 방장) 메시지에만 삭제 버튼
     const delBtn = isOwner ? `<button class="msg-del-btn" onclick="deleteChatMessage('${m.id}', event)" title="삭제"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></button>` : '';
@@ -2446,10 +2504,15 @@ async function deleteChatMessage(id, e) {
   if (e) e.stopPropagation();
   if (!confirm('이 메시지를 삭제하시겠습니까?')) return;
   try {
+    // Storage에 올라간 이미지면 파일도 같이 삭제 (안 그러면 용량만 계속 쌓임)
+    const target = groupChatCache.find(m => String(m.id) === String(id));
+    if (target && isImageMsg(target.message)) {
+      await deleteChatImageFile(imgSrcOf(target.message));
+    }
     await apiReq('/chats?id=eq.'+id, 'DELETE');
-    groupChatCache = groupChatCache.filter(m => m.id !== id);
-    renderGroupChat(groupChatCache);
+    groupChatCache = groupChatCache.filter(m => String(m.id) !== String(id));
     showToast('삭제되었습니다');
+    await loadGroupChat();
   } catch(err) {
     showToast('삭제 실패: ' + err.message);
   }
@@ -2480,8 +2543,8 @@ function renderAllChatMessages(data){
     const t=new Date(m.created_at);
     const ts=formatMsgTime(t);
     let bubbleContent;
-    if(m.message.startsWith('data:image/')){
-      const safeSrc = escHtml(m.message); bubbleContent = `<img src="${safeSrc}" alt="이미지" onclick="viewImg(this.src)" onerror="this.style.display='none';this.insertAdjacentHTML('afterend','[이미지 로드 실패]')">`;
+    if(isImageMsg(m.message)){
+      const safeSrc = escHtml(imgSrcOf(m.message)); bubbleContent = `<img src="${safeSrc}" alt="이미지" onclick="viewImg(this.src)" onerror="this.style.display='none';this.insertAdjacentHTML('afterend','[이미지 로드 실패]')">`;
     } else {
       bubbleContent=escHtml(m.message);
     }
@@ -2490,7 +2553,7 @@ function renderAllChatMessages(data){
       <div class="msg-row">
         ${ball}
         <div style="display:flex;flex-direction:column;gap:2px;${side==='mine'?'align-items:flex-end;':''}">
-          <div class="msg-bubble${m.message.startsWith("data:image/")?" has-image":""}">${bubbleContent}</div>
+          <div class="msg-bubble${isImageMsg(m.message)?" has-image":""}">${bubbleContent}</div>
           <div class="msg-time">${ts}</div>
         </div>
       </div>
@@ -2503,7 +2566,7 @@ function startChatPoll(){
   clearInterval(chatPollTimer);
   chatPollTimer=setInterval(async()=>{
     if(currentUser) await loadGroupChat();
-  },5000);
+  },20000);
 }
 
 // ── 다운로드 ──────────────────────────────────────────────
