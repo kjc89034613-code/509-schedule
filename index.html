@@ -1182,12 +1182,13 @@ function rebuildMemberUI() {
       '<div class="owner-item owner-item-divider" style="border-top:1px solid #e5e7eb;color:#059669;font-size:12px" onclick="addMember()">＋ 멤버 추가</div>' +
       '<div class="owner-item" style="color:#dc2626;font-size:12px" onclick="deleteMember()">－ 멤버 삭제</div>';
   }
-  // 2) 담당자 chip 재구성 (일정 추가 폼) + 멤버 추가/삭제 버튼
+  // 2) 담당자 chip 재구성 (일정 추가 폼) - 본인(currentUser)만 표시
   const empChipsContainer = document.getElementById('empChipsContainer');
   if (empChipsContainer) {
-    const chipsHtml = Object.keys(BASE_EMPLOYEES).map(name =>
-      `<div class="emp-chip" data-name="${escHtml(name)}" onclick="selectEmp(this)">${escHtml(name)}</div>`
-    ).join('');
+    // 본인(currentUser)만 chip 생성, 다른 멤버는 숨김
+    const chipsHtml = (currentUser && BASE_EMPLOYEES[currentUser])
+      ? `<div class="emp-chip" data-name="${escHtml(currentUser)}" onclick="selectEmp(this)">${escHtml(currentUser)}</div>`
+      : '';
     const addBtn = `<div class="emp-chip emp-chip-add" onclick="addMember()" title="멤버 추가" style="background:#f0fdf4;color:#059669;border-color:#86efac;font-weight:800;">＋ 추가</div>`;
     const delBtn = `<div class="emp-chip emp-chip-del" onclick="deleteMember()" title="멤버 삭제" style="background:#fef2f2;color:#dc2626;border-color:#fca5a5;font-weight:800;">－ 삭제</div>`;
     empChipsContainer.innerHTML = chipsHtml + addBtn + delBtn;
@@ -1625,6 +1626,8 @@ function setOwner(name) {
   document.querySelectorAll('.owner-item').forEach(i => {
     i.classList.toggle('active', i.textContent.trim() === name);
   });
+  // 담당자 chip도 본인만 보이도록 재구성
+  rebuildMemberUI();
   // 단톡방 모드로 자동 진입
   currentPeer = '';
   isAllChat = true;
