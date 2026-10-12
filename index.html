@@ -1182,12 +1182,15 @@ function rebuildMemberUI() {
       '<div class="owner-item owner-item-divider" style="border-top:1px solid #e5e7eb;color:#059669;font-size:12px" onclick="addMember()">＋ 멤버 추가</div>' +
       '<div class="owner-item" style="color:#dc2626;font-size:12px" onclick="deleteMember()">－ 멤버 삭제</div>';
   }
-  // 2) 담당자 chip 재구성 (일정 추가 폼)
+  // 2) 담당자 chip 재구성 (일정 추가 폼) + 멤버 추가/삭제 버튼
   const empChipsContainer = document.getElementById('empChipsContainer');
   if (empChipsContainer) {
-    empChipsContainer.innerHTML = Object.keys(BASE_EMPLOYEES).map(name =>
+    const chipsHtml = Object.keys(BASE_EMPLOYEES).map(name =>
       `<div class="emp-chip" data-name="${escHtml(name)}" onclick="selectEmp(this)">${escHtml(name)}</div>`
     ).join('');
+    const addBtn = `<div class="emp-chip emp-chip-add" onclick="addMember()" title="멤버 추가" style="background:#f0fdf4;color:#059669;border-color:#86efac;font-weight:800;">＋ 추가</div>`;
+    const delBtn = `<div class="emp-chip emp-chip-del" onclick="deleteMember()" title="멤버 삭제" style="background:#fef2f2;color:#dc2626;border-color:#fca5a5;font-weight:800;">－ 삭제</div>`;
+    empChipsContainer.innerHTML = chipsHtml + addBtn + delBtn;
   }
   // 3) 범례 재구성
   document.querySelectorAll('.cal-legend').forEach(container => {
@@ -1662,7 +1665,7 @@ function buildPeerButtons() {
 async function selectChatTarget(name) {
   // 본인 미설정 시
   if (!currentUser) {
-    showToast('먼저 우측 상단 "방장선택"으로 본인을 선택하세요');
+    showToast('먼저 우측 상단 "직원"에서 본인을 선택하세요');
     return;
   }
   // 전체
@@ -1876,7 +1879,15 @@ function openModal(prefill=null) {
   document.getElementById('fAllDay').checked = !!isAllDay;
   toggleAllDay();
   // 담당자 chip - 현재 방장만 활성화 색상, 다른 사람은 비활성화
+  // (+ 추가 / - 삭제 버튼은 항상 활성화 유지)
   document.querySelectorAll('.emp-chip').forEach(c => {
+    // 추가/삭제 버튼은 건드리지 않음
+    if (c.classList.contains('emp-chip-add') || c.classList.contains('emp-chip-del')) {
+      c.style.opacity = '1';
+      c.style.pointerEvents = 'auto';
+      c.style.cursor = 'pointer';
+      return;
+    }
     c.className = 'emp-chip';
     const name = c.dataset.name;
     if (name === activeEmp) {
@@ -1946,7 +1957,12 @@ function toggleAllDay() {
 function closeModal() { document.getElementById('modalOverlay').classList.add('hidden'); }
 
 function selectEmp(el) {
-  document.querySelectorAll('.emp-chip').forEach(c=>c.className='emp-chip');
+  // 추가/삭제 버튼은 선택 로직에서 제외
+  if (el.classList.contains('emp-chip-add') || el.classList.contains('emp-chip-del')) return;
+  document.querySelectorAll('.emp-chip').forEach(c=>{
+    if (c.classList.contains('emp-chip-add') || c.classList.contains('emp-chip-del')) return;
+    c.className='emp-chip';
+  });
   el.classList.add(getEmpInfo(el.dataset.name).activeClass);
   document.getElementById('fEmployee').value=el.dataset.name;
   document.getElementById('empWarn').style.display = 'none';
@@ -2240,7 +2256,7 @@ function renderChatMessages(data){
   box.scrollTop=box.scrollHeight;
 }
 async function sendMessage(){
-  if(!currentUser){showToast('먼저 방장선택으로 본인을 선택하세요');return;}
+  if(!currentUser){showToast('먼저 직원에서 본인을 선택하세요');return;}
   const input=document.getElementById('chatInput');
   const msg=input.value.trim();
   if(!msg)return;
@@ -2252,7 +2268,7 @@ async function sendMessage(){
   }catch(e){showToast('전송 실패: '+e.message);input.value=msg;}
 }
 async function sendImage(input){
-  if(!currentUser){showToast('먼저 방장선택으로 본인을 선택하세요');input.value='';return;}
+  if(!currentUser){showToast('먼저 직원에서 본인을 선택하세요');input.value='';return;}
   const file=input.files[0];
   if(!file)return;
   const MAX=1.5*1024*1024;
