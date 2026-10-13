@@ -309,9 +309,9 @@
   .mobile-fixed-legend .cal-legend-item { display:flex; align-items:center; gap:3px; font-size:10px; font-weight:700; color:#475569; white-space:nowrap; }
   .mobile-fixed-legend .cal-legend-dot { width:8px; height:8px; border-radius:2px; }
 
-  /* 웹에서 하단 범례 - tab-schedule의 것만 표시 */
+  /* 웹에서 "세부 일정 내용" 하단 범례: 삭제 요청으로 숨김 처리 */
   @media(min-width:861px) {
-    .tab-schedule .tab-bottom-legend { display:flex; justify-content:flex-end; margin-top:4px; margin-bottom:10px; }
+    .tab-schedule .tab-bottom-legend { display:none; }
     .tab-calendar .tab-bottom-legend { display:none; }
     .tab-bottom-legend .cal-legend { gap:14px; }
     .tab-bottom-legend .cal-legend-item { font-size:12px; font-weight:600; color:var(--text2); gap:5px; }
@@ -1084,6 +1084,7 @@
 let BASE_EMPLOYEES = {
   '구자천': { pillClass:'pill-gjc', calClass:'gjc', activeClass:'active-gjc', colorBg:'#16a34a', colorCal:'#22c55e' },
   '오세훈': { pillClass:'pill-oh',  calClass:'oh',  activeClass:'active-oh',  colorBg:'#2563eb', colorCal:'#3b82f6' },
+  '공석민': { pillClass:'pill-gsm', calClass:'gsm', activeClass:'active-gsm', colorBg:'#dc2626', colorCal:'#ef4444' },
 };
 
 // 추가 대화상대 (localStorage에 저장)
@@ -1099,7 +1100,15 @@ const PRESET_COLORS = [
   { bg:'#0891b2', cal:'#06b6d4', pillClass:'pill-cyan', calClass:'cyan', activeClass:'active-cyan' },
 ];
 
+// 특정 멤버는 항상 이 색으로 고정 (Supabase members 테이블에 저장된 색상이 다른 멤버와 겹쳐 있어도
+// 이 값이 항상 우선 적용됨)
+const FORCED_MEMBER_COLORS = {
+  '공석민': { bg:'#dc2626', cal:'#ef4444', pillClass:'pill-gsm', calClass:'gsm', activeClass:'active-gsm' },
+};
+
 function getEmpInfo(name) {
+  const f = FORCED_MEMBER_COLORS[name];
+  if (f) return { pillClass:f.pillClass, calClass:f.calClass, activeClass:f.activeClass, colorBg:f.bg, colorCal:f.cal };
   return BASE_EMPLOYEES[name] || { pillClass:'pill-gjc', calClass:'gjc', activeClass:'active-gjc', colorBg:'#64748b', colorCal:'#94a3b8' };
 }
 function getEmpNames() { return Object.keys(BASE_EMPLOYEES); }
@@ -1113,7 +1122,16 @@ async function loadMembers() {
       const newEmployees = {};
       data.forEach((m, idx) => {
         const preset = PRESET_COLORS[idx % PRESET_COLORS.length];
-        newEmployees[m.name] = {
+        const forced = FORCED_MEMBER_COLORS[m.name];
+        newEmployees[m.name] = forced ? {
+          pillClass: forced.pillClass,
+          calClass: forced.calClass,
+          activeClass: forced.activeClass,
+          colorBg: forced.bg,
+          colorCal: forced.cal,
+          id: m.id,
+          sort_order: m.sort_order
+        } : {
           pillClass: preset.pillClass,
           calClass: preset.calClass,
           activeClass: preset.activeClass,
@@ -1122,6 +1140,13 @@ async function loadMembers() {
           id: m.id,
           sort_order: m.sort_order
         };
+      });
+      // 고정 색상 멤버가 DB 목록에 없어도 항상 포함 (없으면 회색/초록 기본값으로 보이는 문제 방지)
+      Object.keys(FORCED_MEMBER_COLORS).forEach(n => {
+        if (!newEmployees[n]) {
+          const f = FORCED_MEMBER_COLORS[n];
+          newEmployees[n] = { pillClass:f.pillClass, calClass:f.calClass, activeClass:f.activeClass, colorBg:f.bg, colorCal:f.cal };
+        }
       });
       BASE_EMPLOYEES = newEmployees;
       rebuildMemberUI();
